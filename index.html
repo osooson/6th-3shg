@@ -10,13 +10,13 @@
 <style>
 :root{
   --paper:#EDF1F4; --sheet:#FFFFFF; --ink:#15283C; --muted:#5B6B7B; --line:#CBD5DE;
-  --self:#2E8B57; --spouse:#D4688F; --tax:#B3BDC7; --taxbar:#8C99A6; --warn:#B4441F; --warnbg:#FBEDE7; --accent:#D3921A;
+  --self:#2E8B57; --spouse:#D4688F; --g1:#1F6E45; --g2:#2E8B57; --g3:#52A877; --g4:#82C49D; --g5:#B3DEC4; --p1:#A3426A; --p2:#C95C87; --p3:#DD80A3; --p4:#EBA7C0; --p5:#F5CEDC; --tax:#B3BDC7; --taxbar:#8C99A6; --warn:#B4441F; --warnbg:#FBEDE7; --accent:#D3921A;
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --paper:#0F1A25; --sheet:#172636; --ink:#E4ECF3; --muted:#93A4B4; --line:#2A3D50;
-    --self:#6CC28F; --spouse:#F28DB2; --tax:#3C4E60; --taxbar:#7D8B99; --warn:#F08A63; --warnbg:#3A2219; --accent:#E8AE42;
+    --self:#6CC28F; --spouse:#F28DB2; --g1:#2F8A5A; --g2:#4CAB76; --g3:#6CC28F; --g4:#97D7B0; --g5:#C2EBD2; --p1:#B44F7A; --p2:#D46A93; --p3:#F28DB2; --p4:#F6B1CA; --p5:#FAD3E2; --tax:#3C4E60; --taxbar:#7D8B99; --warn:#F08A63; --warnbg:#3A2219; --accent:#E8AE42;
     color-scheme:dark;
   }
 }
@@ -53,6 +53,10 @@ h3{font-size:15px;margin:0}
 .seg button{flex:1;border:0;background:none;border-radius:7px;padding:8px 6px;font-size:14px;color:var(--muted)}
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper);font-weight:600}
 .controls{display:grid;gap:10px;margin-bottom:18px}
+.ctlrow{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.seg.sm{padding:2px;gap:2px;border-radius:9px}
+.seg.sm button{flex:0 0 auto;padding:6px 10px;font-size:13px;border-radius:7px}
+.seg.mini button{padding:6px 9px;font-size:12px}
 .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .stepper{display:flex;align-items:center;gap:6px}
 .stepper button{width:36px;height:36px;border:1px solid var(--line);background:var(--sheet);border-radius:8px;font-size:18px;line-height:1}
@@ -71,6 +75,8 @@ svg.chart.anim .baseline{animation:fadeIn .4s ease both}
 svg.chart text{fill:var(--muted);font-size:9px}
 .legend{display:flex;flex-wrap:wrap;gap:12px;padding:6px 8px 4px;font-size:12.5px;color:var(--muted)}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.legend[hidden]{display:none}
+.legtog{display:block;margin:2px 6px 0 auto;border:0;background:none;color:var(--muted);font-size:12px;padding:4px 4px}
 .legend i.line{height:0;border-top:2px dashed var(--ink);border-radius:0;vertical-align:3px}
 .callout{margin-top:12px;background:var(--warnbg);color:var(--warn);border-radius:10px;padding:10px 12px;font-size:13.5px;line-height:1.55}
 .callout.info{background:var(--sheet);color:var(--ink);border:1px solid var(--line)}
@@ -126,6 +132,26 @@ label input:not([type=checkbox]),label select,textarea{display:block;width:100%;
 label .conv{display:block;font-size:11.5px;margin-top:2px;height:16px;line-height:16px;overflow:hidden}
 label.chk{display:flex;align-items:center;gap:8px;color:var(--ink);font-size:14px}
 .back{border:0;background:none;color:var(--self);font-weight:600;padding:4px 0 12px;font-size:15px}
+.dd{position:relative}
+.ddbtn{width:100%;display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:var(--sheet);border-radius:10px;padding:9px 12px;text-align:left}
+.ddbtn b{flex:1;font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ddbtn .caret{color:var(--muted);transition:transform .15s}
+.dd.open .ddbtn .caret{transform:rotate(180deg)}
+.ddmenu{display:none;margin-top:4px;background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:4px}
+.dd.open .ddmenu{display:block}
+.ddmenu > button{display:flex;align-items:center;gap:8px;width:100%;border:0;background:none;padding:10px 8px;border-radius:7px;font-size:14px;text-align:left}
+.ddmenu > button[aria-checked="true"]{background:var(--paper);font-weight:600}
+.ddmenu .ck{width:16px;color:var(--self);font-weight:700}
+.ddmenu i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.ddmenu small{color:var(--muted);font-size:11.5px;margin-left:auto}
+.ddfoot{display:flex;justify-content:flex-end;padding:6px 4px 2px;border-top:1px solid var(--line);margin-top:4px}
+svg.chart{touch-action:pan-y;cursor:pointer;user-select:none;-webkit-user-select:none}
+.sched{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--sheet)}
+.shead,.srow{display:grid;grid-template-columns:1fr 1fr 1.6fr 28px;gap:6px;align-items:center}
+.shead{font-size:11.5px;color:var(--muted);margin-bottom:4px}
+.srow{margin-bottom:6px}
+.srow input{width:100%;padding:8px;border:1px solid var(--line);border-radius:7px;background:var(--paper);font-size:16px;color:var(--ink)}
+.srow .x{border:0;background:none;color:var(--muted);font-size:18px}
 .footbar{position:sticky;bottom:0;margin:18px -16px 0;padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 12px);background:var(--paper);border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}
 .settings{background:var(--sheet);border:1px solid var(--line);border-radius:12px;padding:14px}
 #errbar{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);z-index:20;background:var(--warn);color:#fff;border-radius:10px;padding:10px 12px;font-size:13px;display:none}
@@ -229,14 +255,19 @@ function flows(a){
     rt += amt; tx += g-amt; fv += g;
   }
   const yrs = Math.max(1, num(a.payoutYears)||20), n = yrs*12;
-  const P = 12*(i ? fv*i/(1-Math.pow(1+i,-n)) : fv/n);
+  // level payments, or (indexed) payments growing with inflation so they keep today's value
+  const ga = infl(), ra = gy;
+  const P = a.indexed
+    ? (Math.abs(ra-ga)<1e-9 ? fv/yrs : fv*(ra-ga)/((1-Math.pow((1+ga)/(1+ra), yrs))*(1+ra)))
+    : 12*(i ? fv*i/(1-Math.pow(1+i,-n)) : fv/n);
   const years = [];
   // 연금수령연차: year 1 = first year the account is eligible (age 55+ and 5 years since opening); old-plan 퇴직금 starts at 6
   const openAge = num(a.openYear) ? num(a.openYear) - birth(a.owner) : 0;
-  const eligAge = Math.max(55, openAge + 5);
+  const hasRetire = a.type==="dc" || num(a.retire)>0 || num(a.retireFuture)>0;
+  const eligAge = Math.max(55, hasRetire ? openAge : openAge + 5); // 퇴직금이 든 계좌는 가입 5년 요건 없음
   const firstYearNo = a.oldPlan ? Math.max(6, start - eligAge + 1) : Math.max(1, start - eligAge + 1);
   for(let k=0;k<yrs;k++){
-    const bal = nd+rt+tx; let w = k===yrs-1 ? bal : Math.min(P,bal);
+    const bal = nd+rt+tx; let w = k===yrs-1 ? bal : Math.min(P*(a.indexed ? Math.pow(1+ga,k) : 1), bal);
     const yearNo = firstYearNo + k;
     const limit = yearNo<=10 ? bal/(11-yearNo)*1.2 : Infinity; // 연금수령한도 (whole account)
     let inLim = Math.min(w, limit);
@@ -262,9 +293,16 @@ function flows(a){
 
 /* gross annual income of account a in year y as if owner alive (nominal KRW) */
 function acctYear(a, y){
-  const t = TYPES[a.type], age = y - birth(a.owner), start = num(a.startAge)||65;
+  const t = TYPES[a.type], age = y - birth(a.owner);
+  const sch = (t.annuity || a.type==="etc") && a.calcMode==="schedule" ? (a.schedule||[]).filter(r=>num(r.from)) : null;
+  const start = sch ? (sch.length ? Math.min(...sch.map(r=>num(r.from))) : 999) : (num(a.startAge)||65);
   const z = {gross:0, privTaxable:0, pubTaxable:0, retireTax:0};
   if(age < start) return z;
+  if(sch){ // 가입설계서 지급표: the row covering this age decides the monthly amount
+    const row = sch.find(r=>age>=num(r.from) && age<=(num(r.to)||num(r.from)));
+    z.gross = row ? num(row.monthly)*12*(t.usd?fx():1) : 0;
+    return z;
+  }
   if(t.invest){
     const row = flows(a).years[age-start]; if(!row) return z;
     z.gross = row.total; z.privTaxable = row.taxable;
@@ -306,7 +344,9 @@ function personTax(items, age){
 
 /* ================= scenario simulation ================= */
 function survivorRate(m){ return m>=240?.6 : m>=120?.5 : .4; }
+let seriesMeta = {};
 function simulate(scn){
+  seriesMeta = {};
   const dead = scn==="self"||scn==="spouse" ? scn : null;
   const deathYear = dead ? birth(dead)+num(S.ui.deathAge) : Infinity;
   const a0 = Math.max(ageNow("self"),50), a1 = 100, rows = [];
@@ -350,12 +390,22 @@ function simulate(scn){
     }
     const tax = {};
     for(const o of ["self","spouse"]) tax[o] = personTax(items[o], y-birth(o));
-    const sum = (o,f)=>items[o].reduce((s,x)=>s+f(x),0);
+    const flt = S.ui.filter, pick = x => !flt || (x.a && flt.includes(x.a.id));
+    const sum = (o,f)=>items[o].filter(pick).reduce((s,x)=>s+f(x),0);
     const d = S.ui.real ? idx(y) : 1;
     const r = {ageS, ageP:y-birth("spouse"), y, alive:{self:alive("self"), spouse:alive("spouse")}, items, tax, notes,
       net:{self:sum("self",x=>x.gross-x.tax)/12/d, spouse:sum("spouse",x=>x.gross-x.tax)/12/d},
       taxM:(sum("self",x=>x.tax)+sum("spouse",x=>x.tax))/12/d, d};
     r.total = r.net.self + r.net.spouse; r.gross = r.total + r.taxM;
+    // per-product series (recipient + source account) for the stacked chart
+    r.series = {};
+    for(const o of ["self","spouse"]) for(const x of items[o].filter(pick)){
+      if(!(x.gross>0)) continue;
+      const surv = /유족연금/.test(x.name);
+      const key = x.a && x.a.type==="irp" && !surv ? `${o}:irp` : `${o}:${x.a?x.a.id:"x"}${surv?":s":""}`;
+      r.series[key] = (r.series[key]||0) + (x.gross-x.tax)/12/d;
+      if(!seriesMeta[key]) seriesMeta[key] = {o, name: key.endsWith(":irp") ? (S.accounts.filter(a=>a.type==="irp").length>1 ? "IRP 합산" : "IRP") : x.name + (x.a && x.a.owner!==o && !surv ? " (승계)" : "")};
+    }
     rows.push(r);
   }
   return rows;
@@ -458,10 +508,12 @@ function render(){
   document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-current", b.dataset.tab===(view==="edit"?"accounts":view) ? "page":"false"));
   const h = view==="flow" ? viewFlow() : view==="accounts" ? viewAccounts() : view==="edit" ? viewEdit() : viewSettings();
   app().innerHTML = h;
+  if(view==="flow") bindChart();
 }
-function go(v){ view = v; pendingDel = null; pendingReset = false; if(v==="flow") animateChart = true; render(); window.scrollTo(0,0); }
+function go(v){ view = v; pendingDel = null; pendingReset = false; fltOpen = false; if(v==="flow") animateChart = true; render(); window.scrollTo(0,0); }
 
 /* ---------- flow view ---------- */
+let chartGeom = null, flowRows = null, flowBase = null, fltOpen = false;
 function viewFlow(){
   const ui = S.ui;
   let h = "";
@@ -469,34 +521,59 @@ function viewFlow(){
   if(!S.accounts.length){
     return h + `<div class="empty">아직 등록된 연금이 없습니다. <button type="button" class="add" data-act="tab" data-tab="accounts" style="padding:0">계좌 탭</button>에서 국민연금, 연금저축, IRP, 연금보험을 추가하면 나이별 실제 소득이 여기에 나타납니다. 미리 보려면 가정 탭의 “예시로 채워보기”를 누르세요.</div>`;
   }
-  h += `<div class="controls">
-    <div class="seg" role="group" aria-label="시나리오">
-      ${[["both","부부 모두 생존"],["self","본인 사망"],["spouse","배우자 사망"]].map(([k,l])=>`<button type="button" data-act="scn" data-v="${k}" aria-pressed="${ui.scenario===k}">${l}</button>`).join("")}
-    </div>`;
+  h += `<div class="controls"><div class="ctlrow">
+    <div class="seg sm" role="group" aria-label="시나리오">
+      ${[["both","부부"],["self","본인 사망"],["spouse","배우자 사망"]].map(([k,l])=>`<button type="button" data-act="scn" data-v="${k}" aria-pressed="${ui.scenario===k}">${l}</button>`).join("")}
+    </div>
+    <div class="seg sm mini" role="group" aria-label="금액 기준"><button type="button" data-act="real" data-v="1" aria-pressed="${ui.real}">현재가치</button><button type="button" data-act="real" data-v="0" aria-pressed="${!ui.real}">그해</button></div></div>`;
   if(ui.scenario!=="both") h += `<div class="row"><span class="small muted">${OWN[ui.scenario]} 사망 나이</span>
       <div class="stepper"><button type="button" data-act="death" data-d="-1" aria-label="한 살 줄이기">−</button><input type="number" inputmode="numeric" data-act-input="deathAge" value="${ui.deathAge}" aria-label="사망 나이"><button type="button" data-act="death" data-d="1" aria-label="한 살 늘리기">+</button></div></div>`;
-  h += `<div class="seg" role="group" aria-label="금액 기준">
-      <button type="button" data-act="real" data-v="1" aria-pressed="${ui.real}">오늘 가치로</button>
-      <button type="button" data-act="real" data-v="0" aria-pressed="${!ui.real}">그해 금액으로</button></div></div>`;
+
+  h += filterMenu() + `</div>`;
 
   const all = simulate(ui.scenario), allBase = ui.scenario==="both" ? null : simulate("both");
   let first = all.findIndex((r,i)=>r.gross>0 || (allBase && allBase[i].gross>0)); if(first<0) first = 0;
   first = Math.max(0, first-1);
-  const rows = all.slice(first), base = allBase ? allBase.slice(first) : null;
-  if(!rows.some(r=>r.ageS===ui.selAge)) ui.selAge = Math.min(Math.max(65, rows[0].ageS), rows[rows.length-1].ageS);
-  const cur = rows.find(r=>r.ageS===ui.selAge), bcur = base && base.find(r=>r.ageS===ui.selAge);
+  flowRows = all.slice(first); flowBase = allBase ? allBase.slice(first) : null;
+  if(!flowRows.some(r=>r.ageS===ui.selAge)) ui.selAge = Math.min(Math.max(65, flowRows[0].ageS), flowRows[flowRows.length-1].ageS);
   const unit = ui.real ? "오늘 가치" : "그해 금액";
+  h += `<div id="fdLead">${leadHtml()}</div>`;
+  h += chartSvg(flowRows, flowBase);
+  h += `<div id="fdBody">${bodyHtml()}</div>`;
+  // table
+  h += `<section><h2>나이별 월 소득</h2><p class="hint">세후 월액, ${unit} 기준, 단위 만원입니다.</p><div class="tablewrap"><table class="num"><thead><tr><th>나이<small>본인/배우자</small></th><th>본인</th><th>배우자</th><th>합계</th><th>세금</th></tr></thead><tbody>`;
+  flowRows.forEach(r=>{
+    const deadMark = !r.alive.self ? " (본인 사망)" : !r.alive.spouse ? " (배우자 사망)" : "";
+    h += `<tr data-act="sel" data-age="${r.ageS}" class="${r.ageS===ui.selAge?"sel":""} ${deadMark?"dead":""}"><td>${r.ageS} / ${r.ageP}${deadMark&&(r.y===birth(ui.scenario)+num(ui.deathAge))?`<small>${OWN[ui.scenario]} 사망</small>`:""}</td><td>${r.alive.self&&r.net.self>=5000?mw(r.net.self):"-"}</td><td>${r.alive.spouse&&r.net.spouse>=5000?mw(r.net.spouse):"-"}</td><td><b>${r.total>=5000?mw(r.total):"-"}</b></td><td>${r.taxM>=5000?mw(r.taxM):"-"}</td></tr>`;
+  });
+  h += `</tbody></table></div></section>`;
+  return h;
+}
+function filterMenu(){
+  const ui = S.ui;
+  if(ui.filter) ui.filter = ui.filter.filter(id=>S.accounts.some(a=>a.id===id)); if(ui.filter && !ui.filter.length) ui.filter = null;
+  const sel = ui.filter ? S.accounts.filter(a=>ui.filter.includes(a.id)) : null;
+  const label = !sel ? "전체" : sel.length===1 ? `${esc(sel[0].name)} (${OWN[sel[0].owner]})` : `${sel.length}개 선택`;
+  const item = (id, on, inner) => `<button type="button" role="menuitemcheckbox" aria-checked="${on}" data-act="flt" data-id="${id}"><span class="ck">${on?"✓":""}</span>${inner}</button>`;
+  return `<div class="dd${fltOpen?" open":""}"><button type="button" class="ddbtn" data-act="fltmenu" aria-expanded="${fltOpen}"><span class="muted small">표시 항목</span><b>${label}</b><span class="caret">▾</span></button>
+    <div class="ddmenu" role="menu">${item("all", !ui.filter, "전체")}${S.accounts.map(a=>item(a.id, !!(ui.filter && ui.filter.includes(a.id)), `<i style="background:var(${a.owner==="self"?"--self":"--spouse"})"></i>${esc(a.name||TYPES[a.type].label)}<small>${OWN[a.owner]}</small>`)).join("")}
+    <div class="ddfoot"><button type="button" class="btn sm" data-act="fltmenu">닫기</button></div></div></div>`;
+}
+function leadHtml(){
+  const ui = S.ui, cur = flowRows.find(r=>r.ageS===ui.selAge), unit = ui.real ? "오늘 가치" : "그해 금액";
   const who = [cur.alive.self?`본인 ${cur.ageS}세`:"", cur.alive.spouse?`배우자 ${cur.ageP}세`:""].filter(Boolean).join(", ");
-  h += `<p class="lead">${cur.y}년 (${who})<br>가구 세후 월 <span class="amt num">${man(cur.total)}</span></p>
-    <p class="small muted num" style="margin:0">세전 ${man(cur.gross)}, 세금 ${man(cur.taxM)}, ${unit} 기준. 막대나 표의 줄을 누르면 그해로 바뀝니다.</p>`;
-  h += chartSvg(rows, base);
+  return `<p class="lead">${cur.y}년 (${who})<br>${ui.filter?"선택한 항목 세후 월":"가구 세후 월"} <span class="amt num">${man(cur.total)}</span></p>
+    <p class="small muted num" style="margin:0">세전 ${man(cur.gross)}, 세금 ${man(cur.taxM)}, ${unit} 기준. 차트를 누른 채 좌우로 움직이면 나이가 따라 바뀝니다.</p>`;
+}
+function bodyHtml(){
+  const ui = S.ui, cur = flowRows.find(r=>r.ageS===ui.selAge), bcur = flowBase && flowBase.find(r=>r.ageS===ui.selAge);
+  let h = "";
   if(bcur && bcur.total>0 && !(cur.alive.self && cur.alive.spouse)){
     const p = cur.total/bcur.total*100;
     h += `<div class="callout">${OWN[ui.scenario]} 사망 후 소득은 부부가 모두 살아 있을 때 ${man(bcur.total)} 대비 ${p.toFixed(0)}% 수준입니다. 생활비는 혼자가 되어도 둘일 때의 70% 안팎이 든다고 보는 경우가 많으니 그 차이를 확인해 보세요.</div>`;
   }
-  // items
   const list = [];
-  for(const o of ["self","spouse"]) for(const x of cur.items[o]){ if(x.gross>0) list.push({o,x}); }
+  for(const o of ["self","spouse"]) for(const x of cur.items[o]){ if(x.gross>0 && (!ui.filter || (x.a && ui.filter.includes(x.a.id)))) list.push({o,x}); }
   list.sort((p,q)=>q.x.gross-p.x.gross);
   h += `<ul class="items">` + (list.length ? list.map(({o,x})=>`<li><span>${esc(x.name)}<span class="tag">${OWN[o]}${x.tag?" / "+esc(x.tag):""}</span></span><span class="r num">${man((x.gross-x.tax)/12/cur.d)}<small>세금 ${man(x.tax/12/cur.d)}</small></span></li>${partsLine(x, o==='self'?cur.ageS:cur.ageP, cur.d)}`).join("")
     : `<li class="muted">이 해에는 들어오는 연금이 없습니다.</li>`) + waitingRows(cur) + `</ul>`;
@@ -504,7 +581,6 @@ function viewFlow(){
   if(ui.scenario!=="both"){
     h += `<p class="hint">유족연금은 사망한 배우자의 국민연금 가입기간에 따라 기본연금액의 40~60%로 추정했고(공단 조회값을 넣으면 그 값을 씁니다), 본인 노령연금이 있으면 “노령연금 + 유족연금 30%”와 “유족연금만” 중 많은 쪽을 고른다고 계산합니다. 유족연금은 비과세입니다. 배우자가 젊을 때 사망하면 유족연금이 3년 지급 후 일정 나이까지 정지될 수 있어 이 부분은 반영하지 않았습니다.</p>`;
   }
-  // tax method summary
   const tm = o=>{ const t = cur.tax[o]; if(!cur.alive[o]) return "";
     if(t.method==="low") return `${OWN[o]} 사적연금 과세분 연 ${man(t.PT)}: ${(lowRate(o==="self"?cur.ageS:cur.ageP)*100).toFixed(1)}% 저율 분리과세`;
     if(t.method==="sep") return `${OWN[o]} 사적연금 과세분 연 ${man(t.PT)}: 1,500만원 초과로 16.5% 분리과세 선택이 유리`;
@@ -512,20 +588,38 @@ function viewFlow(){
     return ""; };
   const tl = [tm("self"),tm("spouse")].filter(Boolean);
   if(tl.length) h += `<p class="hint num">${tl.join("<br>")} (금액은 그해 명목 기준)</p>`;
-  // table
-  h += `<section><h2>나이별 월 소득</h2><p class="hint">세후 월액, ${unit} 기준, 단위 만원입니다.</p><div class="tablewrap"><table class="num"><thead><tr><th>나이<small>본인/배우자</small></th><th>본인</th><th>배우자</th><th>합계</th><th>세금</th></tr></thead><tbody>`;
-  rows.forEach(r=>{
-    const deadMark = !r.alive.self ? " (본인 사망)" : !r.alive.spouse ? " (배우자 사망)" : "";
-    h += `<tr data-act="sel" data-age="${r.ageS}" class="${r.ageS===ui.selAge?"sel":""} ${deadMark?"dead":""}"><td>${r.ageS} / ${r.ageP}${deadMark&&(r.y===birth(ui.scenario)+num(ui.deathAge))?`<small>${OWN[ui.scenario]} 사망</small>`:""}</td><td>${r.alive.self&&r.net.self>=5000?mw(r.net.self):"-"}</td><td>${r.alive.spouse&&r.net.spouse>=5000?mw(r.net.spouse):"-"}</td><td><b>${r.total>=5000?mw(r.total):"-"}</b></td><td>${r.taxM>=5000?mw(r.taxM):"-"}</td></tr>`;
-  });
-  h += `</tbody></table></div></section>`;
   return h;
+}
+/* move the selection without redrawing the chart (keeps the finger's pointer capture) */
+function selectAge(age){
+  if(!flowRows || age===S.ui.selAge || !flowRows.some(r=>r.ageS===age)) return;
+  S.ui.selAge = age;
+  const i = chartGeom.ages.indexOf(age), x = chartGeom.L + i*chartGeom.cw;
+  const sr = document.getElementById("selRect"), sl = document.getElementById("selLabel");
+  if(sr) sr.setAttribute("x", x.toFixed(2));
+  if(sl){ sl.setAttribute("x", (x+chartGeom.cw/2).toFixed(2)); sl.textContent = age+"세"; }
+  const l = document.getElementById("fdLead"), b = document.getElementById("fdBody");
+  if(l) l.innerHTML = leadHtml(); if(b) b.innerHTML = bodyHtml();
+  app().querySelectorAll("tbody tr").forEach(tr=>tr.classList.toggle("sel", num(tr.dataset.age)===age));
+}
+function bindChart(){
+  const svg = document.getElementById("chartSvg"); if(!svg || !chartGeom) return;
+  let down = false;
+  const ageAt = e=>{
+    const r = svg.getBoundingClientRect(), vx = (e.clientX - r.left)/r.width*chartGeom.W;
+    const i = Math.max(0, Math.min(chartGeom.ages.length-1, Math.floor((vx - chartGeom.L)/chartGeom.cw)));
+    return chartGeom.ages[i];
+  };
+  svg.addEventListener("pointerdown", e=>{ down = true; try{ svg.setPointerCapture(e.pointerId); }catch{} selectAge(ageAt(e)); });
+  svg.addEventListener("pointermove", e=>{ if(down) selectAge(ageAt(e)); });
+  const end = ()=>{ if(down){ down = false; commitUi(); } };
+  svg.addEventListener("pointerup", end); svg.addEventListener("pointercancel", end); svg.addEventListener("lostpointercapture", end);
 }
 /* accounts with no payment in the selected year, shown greyed so they never seem to vanish */
 function waitingRows(cur){
   const shown = new Set();
   for(const o of ["self","spouse"]) for(const x of cur.items[o]) if(x.gross>0 && x.a) shown.add(x.a.id);
-  return S.accounts.filter(a=>!shown.has(a.id)).map(a=>{
+  return S.accounts.filter(a=>!shown.has(a.id) && (!S.ui.filter || S.ui.filter.includes(a.id))).map(a=>{
     const age = cur.y - birth(a.owner), st = num(a.startAge)||65, yrs = num(a.payoutYears);
     let why;
     if(!cur.alive[a.owner]) why = "사망 후 지급 없음";
@@ -585,27 +679,34 @@ function chartSvg(rows, base){
   const tH = Math.max(6, ph*tMax/mMax);   // tax panel uses the same 만원-per-pixel scale as the main axis
   const tT=18, mT=tT+tH+22, H=mT+ph+B;
   const anim = animateChart; animateChart = false;
+  // series order: 본인 계좌들(그린 계열) → 배우자 계좌들(핑크 계열), account list order, survivor/inherited after
+  const present = new Set(); rows.forEach(r=>Object.keys(r.series).forEach(k=>present.add(k)));
+  const order = [];
+  for(const o of ["self","spouse"]){
+    S.accounts.forEach(a=>{ [a.type==="irp" ? `${o}:irp` : `${o}:${a.id}`, `${o}:${a.id}:s`].forEach(k=>{ if(present.has(k) && !order.includes(k)) order.push(k); }); });
+    [...present].filter(k=>k.startsWith(o+":") && !order.includes(k)).forEach(k=>order.push(k));
+  }
+  const colorOf = {}, cnt = {self:0, spouse:0};
+  order.forEach(k=>{ const o = k.split(":")[0]; colorOf[k] = `--${o==="self"?"g":"p"}${(cnt[o]++ % 5)+1}`; });
   let g = "";
   // tax panel axis
-  g += `<text x="${L+2}" y="${tT-5}" text-anchor="start" style="font-size:8px">세금 (만원)</text>`;
+  g += `<text x="${W-R}" y="${tT-5}" text-anchor="end" style="font-size:8px">세금 (만원)</text>`;
   [0,1].forEach(k=>{ const yv=tT+tH-tH*k; g += `<line x1="${L}" x2="${W-R}" y1="${yv}" y2="${yv}" stroke="var(--line)" stroke-width="${k?0.5:1}"/>` + ((k===1 || tH>=12) ? `<text x="${L-4}" y="${yv+3}" text-anchor="end">${Math.round(tMax*k/10000)}</text>` : ""); });
   // main panel axis
   g += `<text x="${L+2}" y="${mT-5}" text-anchor="start" style="font-size:8px">세후 월 소득 (만원)</text>`;
   for(let k=0;k<=4;k++){ const yv=mT+ph-ph*k/4;
     g += `<line x1="${L}" x2="${W-R}" y1="${yv}" y2="${yv}" stroke="var(--line)" stroke-width="${k?0.5:1}"/><text x="${L-4}" y="${yv+3}" text-anchor="end">${Math.round(mMax*k/4/10000)}</text>`; }
   rows.forEach((r,i)=>{
-    const x=L+i*cw, sel=r.ageS===S.ui.selAge, op=sel?1:.78, bx=(x+cw*.12).toFixed(2), bw=(cw*.76).toFixed(2), delay=`animation-delay:${i*16}ms`;
+    const x=L+i*cw, sel=false, op=.85, bx=(x+cw*.12).toFixed(2), bw=(cw*.76).toFixed(2), delay=`animation-delay:${i*16}ms`;
     // main stack: self (green) + spouse (pink)
     let yy=mT+ph, col="";
     const seg=(v,c)=>{ const h=ph*v/mMax; if(h<=0) return; yy-=h; col+=`<rect x="${bx}" y="${yy.toFixed(2)}" width="${bw}" height="${h.toFixed(2)}" fill="var(${c})" opacity="${op}"/>`; };
-    seg(r.net.self,"--self"); seg(r.net.spouse,"--spouse");
+    order.forEach(k=>seg(r.series[k]||0, colorOf[k]));
     if(col) g += `<g class="bar" style="${delay}">${col}</g>`;
     // tax bar on its own axis
     const th = tH*r.taxM/tMax;
     if(th>0) g += `<g class="bar" style="${delay}"><rect x="${bx}" y="${(tT+tH-th).toFixed(2)}" width="${bw}" height="${th.toFixed(2)}" fill="var(--taxbar)" opacity="${op}"/></g>`;
-    if(sel) g += `<rect x="${x.toFixed(2)}" y="${tT-2}" width="${cw.toFixed(2)}" height="${(mT+ph)-(tT-2)}" fill="none" stroke="var(--ink)" rx="2"/>`;
     if(r.ageS%5===0) g += `<text x="${(x+cw/2).toFixed(2)}" y="${H-8}" text-anchor="middle" ${sel?'style="fill:var(--ink);font-weight:700"':""}>${r.ageS}</text>`;
-    g += `<rect x="${x.toFixed(2)}" y="0" width="${cw.toFixed(2)}" height="${H}" fill="transparent" data-act="sel" data-age="${r.ageS}" style="cursor:pointer"/>`;
   });
   if(base){
     const pts = base.map((r,i)=>`${(L+i*cw+cw/2).toFixed(2)},${(mT+ph-ph*r.total/mMax).toFixed(2)}`).join(" ");
@@ -614,8 +715,13 @@ function chartSvg(rows, base){
     if(di>=0){ const x=L+di*cw; g += `<line x1="${x.toFixed(2)}" x2="${x.toFixed(2)}" y1="${tT}" y2="${mT+ph}" stroke="var(--warn)" stroke-width="1" pointer-events="none"/><text x="${(x+2).toFixed(2)}" y="${mT+8}" style="fill:var(--warn);font-size:8px">${OWN[dead]} 사망</text>`; }
   }
   g += `<text x="${W-R}" y="${H-1}" text-anchor="end" style="font-size:8px">본인 나이</text>`;
-  return `<div class="chartwrap"><svg class="chart${anim?" anim":""}" viewBox="0 0 ${W} ${H}" role="img" aria-label="본인 나이별 세금과 가구 세후 월 소득">${g}</svg>
-    <div class="legend"><span><i style="background:var(--self)"></i>본인 세후</span><span><i style="background:var(--spouse)"></i>배우자 세후</span><span><i style="background:var(--taxbar)"></i>세금 (위쪽, 같은 눈금)</span>${base?`<span><i class="line"></i>부부 모두 생존 시 합계</span>`:""}</div></div>`;
+  const si = Math.max(0, rows.findIndex(r=>r.ageS===S.ui.selAge));
+  g += `<rect id="selRect" x="${(L+si*cw).toFixed(2)}" y="${tT-2}" width="${cw.toFixed(2)}" height="${(mT+ph)-(tT-2)}" fill="var(--ink)" fill-opacity=".08" stroke="var(--ink)" rx="2" pointer-events="none"/>`;
+  g += `<text id="selLabel" x="${(L+si*cw+cw/2).toFixed(2)}" y="9" text-anchor="middle" style="fill:var(--ink);font-weight:700;font-size:9px" pointer-events="none">${S.ui.selAge}세</text>`;
+  chartGeom = {L, cw, W, ages: rows.map(r=>r.ageS)};
+  return `<div class="chartwrap"><svg id="chartSvg" class="chart${anim?" anim":""}" viewBox="0 0 ${W} ${H}" role="img" aria-label="본인 나이별 세금과 가구 세후 월 소득">${g}</svg>
+    <button type="button" class="legtog" data-act="legend" aria-expanded="${!S.ui.legendHidden}">${S.ui.legendHidden?"범례 보기 ▾":"범례 숨기기 ▴"}</button>
+    <div class="legend"${S.ui.legendHidden?" hidden":""}>${order.map(k=>`<span><i style="background:var(${colorOf[k]})"></i>${esc((seriesMeta[k]||{}).name||"")} <small class="muted">${OWN[k.split(":")[0]]}</small></span>`).join("")}<span><i style="background:var(--taxbar)"></i>세금 (위쪽, 같은 눈금)</span>${base?`<span><i class="line"></i>부부 모두 생존 시 합계</span>`:""}</div></div>`;
 }
 
 /* ---------- accounts view ---------- */
@@ -627,7 +733,7 @@ function summary(a){
     const b = balanceNow(a); val = man(b);
     const f = flows(a);
     meta += `${a.institution?" / "+esc(a.institution):""} / 원금 ${man(num(a.paid))}, 수익 ${man(num(a.earn))}`;
-    meta += `<br>${a.startAge}세부터 ${a.payoutYears||20}년, 첫해 월 ${man((f.years[0]||{total:0}).total/12)} (세전, 그해 금액)`;
+    meta += `<br>${a.startAge}세부터 ${a.payoutYears||20}년${a.indexed?", 물가연동":""}, 첫해 월 ${man((f.years[0]||{total:0}).total/12)} (세전, 그해 금액)`;
     if(a.type==="irp" && num(a.retireFuture)) meta += `<br>${a.retireAge||60}세 퇴직금 ${man(num(a.retireFuture))} 이전 예정`;
     meta += ` / 사망 시 ${od==="inherit"?"배우자 승계":"일시금"}`;
     const over = f.years.filter(r=>r.retireX+r.taxableX>1);
@@ -637,6 +743,13 @@ function summary(a){
     val = a.monthly ? `월 ${man(num(a.monthly))}` : "예상액 미입력";
     meta += ` / 가입 ${m}개월 / ${a.startAge||65}세 개시 / 과세대상 ${a.taxRatio??100}%`;
     if(m<120) flag = `최소 가입기간 120개월 중 ${m}개월이라 이대로면 노령연금 대신 반환일시금 대상이고, 유족연금 계산에서도 빠집니다. 남은 ${120-m}개월을 임의가입이나 추후납부로 채울 수 있는지 공단(1355)에 확인해 보세요.`;
+  } else if((t.annuity || a.type==="etc") && a.calcMode==="schedule"){
+    const sc = (a.schedule||[]).filter(r=>num(r.from));
+    const fmtS = v => t.usd ? "$"+Math.round(num(v)).toLocaleString() : man(num(v));
+    val = sc.length ? `월 ${fmtS(sc[0].monthly)}~` : "지급표 미입력";
+    meta += ` / 지급표 ${sc.length}구간` + (sc.length ? ` (${Math.min(...sc.map(r=>num(r.from)))}~${Math.max(...sc.map(r=>num(r.to)||num(r.from)))}세)` : "");
+    meta += `<br>${t.annuity ? (a.taxFree===false?"과세":"비과세") : "비과세"} / 사망 시 ${od==="spouse"?"배우자 계속 수령":"지급 종료"}`;
+    if(!sc.length) flag = "지급표가 비어 있어 0원으로 계산됩니다. 편집에서 나이 구간별 금액을 넣어 주세요.";
   } else if(t.annuity){
     const auto = a.calcMode==="auto", ac = auto ? annuityCalc(a) : null;
     val = auto ? (ac.monthly>0 ? `월 ${fmtC(ac.monthly)}` : "이율 입력 필요") : a.monthly ? `월 ${fmtC(a.monthly)}` : "예상액 미입력";
@@ -689,6 +802,17 @@ function SEL(label, key, opts, opt={}){
   return `<label class="${opt.full?"full":""}">${label}<select data-f="${key}" ${opt.redraw?'data-redraw="1"':""}>${opts.map(([k,l])=>`<option value="${k}" ${String(v)===String(k)?"selected":""}>${l}</option>`).join("")}</select></label>`;
 }
 function CHK(label, key, def){ const on = draft[key] ?? def; return `<label class="chk full"><input type="checkbox" data-f="${key}" ${on?"checked":""}>${label}</label>`; }
+function scheduleEditor(a, cur){
+  const rows = a.schedule && a.schedule.length ? a.schedule : [{from:"",to:"",monthly:""}];
+  if(!a.schedule || !a.schedule.length) draft.schedule = rows;
+  let h = `<div class="full sched"><div class="shead"><span>시작 나이</span><span>끝 나이</span><span>월 금액 ${cur}</span><span></span></div>`;
+  rows.forEach((r,i)=>{
+    h += `<div class="srow"><input type="number" inputmode="numeric" data-sch="${i}" data-sf="from" value="${esc(r.from)}" aria-label="시작 나이"><input type="number" inputmode="numeric" data-sch="${i}" data-sf="to" value="${esc(r.to)}" aria-label="끝 나이"><input type="number" inputmode="decimal" data-sch="${i}" data-sf="monthly" value="${esc(r.monthly)}" aria-label="월 금액"><button type="button" class="x" data-act="schdel" data-i="${i}" aria-label="구간 삭제">×</button></div>`;
+  });
+  h += `<button type="button" class="add" data-act="schadd">+ 구간 추가</button>
+    <p class="hint">가입설계서나 보험사 앱의 ‘연금 예시표’에 나온 금액을 나이 구간별로 옮겨 적으세요. 확정이율, 보너스, 체증, 보증기간 같은 특별 조항이 이미 반영된 금액이라 앱이 따로 계산하지 않습니다. 보수적으로 보려면 최저보증이율 열의 금액을 쓰세요. 끝 나이를 비우면 그 한 해만 지급합니다.</p></div>`;
+  return h;
+}
 function viewEdit(){
   const a = draft, t = TYPES[a.type], isNew = !S.accounts.some(x=>x.id===a.id);
   let h = `<button type="button" class="back" data-act="tab" data-tab="accounts">‹ 계좌 목록</button><h2 style="margin-bottom:12px">${isNew?"연금 추가":"연금 편집"}</h2><div class="form">`;
@@ -700,9 +824,10 @@ function viewEdit(){
     h += `<p class="hint full">금융사 앱에 나오는 원금과 수익을 그대로 옮기세요. 손실이면 수익을 음수로 적습니다.</p>`;
     h += `<h3>앞으로 납입</h3>` + F("월 납입액 (원)","contrib",{money:"krw"}) + F("납입 종료 나이","contribUntil",{def:60});
     if(a.type!=="dc") h += F("세액공제 안 받은 원금 (원)","nondeduct",{money:"krw",full:true}) + CHK("앞으로의 월 납입액도 세액공제를 받음 (소득이 없으면 해제)","contribDeduct",true);
-    if(a.type==="irp") h += `<h3>퇴직금</h3>` + F("이미 이전된 퇴직금 (원)","retire",{money:"krw"}) + F("퇴직 시 이전 예정 퇴직금 (원, 세전)","retireFuture",{money:"krw"}) + F("퇴직금 이전 나이","retireAge",{def:60});
+    if(a.type==="irp") h += `<p class="hint full">개인 납입분과 퇴직금을 따로 관리하려면 IRP를 두 개로 등록하세요(예: “IRP 개인납입”, “IRP 퇴직금”). 계좌마다 수령 시작 나이와 기간을 다르게 잡아 어느 돈을 먼저 쓸지 정할 수 있고, 연금수령한도도 계좌별로 따로 계산됩니다.</p><h3>퇴직금</h3>` + F("이미 이전된 퇴직금 (원)","retire",{money:"krw"}) + F("퇴직 시 이전 예정 퇴직금 (원, 세전)","retireFuture",{money:"krw"}) + F("퇴직금 이전 나이","retireAge",{def:60});
     if(a.type!=="ps") h += F("퇴직소득세 실효세율 (%)","retireRate",{def:4,dec:true});
     h += `<h3>연금 수령</h3>` + F("수령 개시 나이","startAge",{def:60}) + F("수령 기간 (년)","payoutYears",{def:20});
+    h += CHK("수령액을 매년 물가만큼 늘려 현재가치 유지 (첫해는 낮아짐)","indexed",false);
     h += F("예상 수익률 (연 %)","rate",{dec:true}) + `<p class="hint full" style="margin-top:-4px">비우면 가정 탭의 기대수익률(${S.settings.rate}%)을 씁니다. 원리금보장 상품만 담았다면 그 금리를, ETF라면 기대 수익률을 넣으세요.</p>`;
     h += F("계좌 개설 연도","openYear",{def:""});
     if(a.type!=="ps") h += CHK("2013년 3월 이전 가입한 퇴직연금에서 온 퇴직금 (연금수령연차 6년차부터)","oldPlan",false);
@@ -720,8 +845,10 @@ function viewEdit(){
     h += F((a.payMode==="lump"?"일시납 보험료 ":"월 보험료 ")+cur,"premium",{money:mk});
     if(a.payMode!=="lump") h += F("납입 기간 (년)","payYears");
     h += `<h3>지금 적립금</h3>` + F("납입한 보험료 "+cur,"paid",{money:mk}) + F("적립 이자 "+cur,"earn",{money:mk});
-    h += `<h3>연금 수령</h3>` + SEL("월 연금 계산","calcMode",[["manual","보험사 예상액 직접 입력"],["auto","적립금·이율로 자동 계산"]],{redraw:true,def:"manual",full:true});
-    if(a.calcMode==="auto"){
+    h += `<h3>연금 수령</h3>` + SEL("월 연금 계산","calcMode",[["manual","보험사 예상액 직접 입력"],["auto","적립금·이율로 자동 계산"],["schedule","가입설계서 지급표 입력 (특약·체증형 등)"]],{redraw:true,def:"manual",full:true});
+    if(a.calcMode==="schedule") h += scheduleEditor(a, cur);
+    if(a.calcMode==="schedule"){}
+    else if(a.calcMode==="auto"){
       if(a.payMode!=="lump") h += F("남은 납입 기간 (년)","payLeft");
       h += F("확정이율 (연 %, 있을 때만)","fixRate",{dec:true}) + F("확정이율 남은 기간 (년)","fixYears");
       h += F("이후 적립 이율 (연 %)","rate",{dec:true,def:t.usd?"":2.5}) + F("연금 수령 중 이율 (연 %)","payRate",{dec:true});
@@ -737,7 +864,9 @@ function viewEdit(){
     h += SEL("본인 사망 시","onDeath",[["stop","지급 종료"],["spouse","배우자가 계속 수령 (부부형)"]],{def:"stop",full:true});
     h += CHK("보험차익 비과세 요건 충족 (10년 이상 유지 등)","taxFree",true);
   } else {
-    h += F("월 수령액 (원)","monthly",{money:"krw",full:true}) + F("수령 개시 나이","startAge",{def:65}) + F("지급 기간 (년, 0=평생)","payoutYears",{def:0});
+    h += SEL("월 수령액 입력","calcMode",[["manual","정액"],["schedule","나이 구간별 금액 (증가형 등)"]],{redraw:true,def:"manual",full:true});
+    if(a.calcMode==="schedule") h += scheduleEditor(a, "(원)");
+    else h += F("월 수령액 (원)","monthly",{money:"krw",full:true}) + F("수령 개시 나이","startAge",{def:65}) + F("지급 기간 (년, 0=평생)","payoutYears",{def:0});
     h += SEL("본인 사망 시","onDeath",[["spouse","배우자가 계속 수령"],["stop","지급 종료"]],{def:"spouse",full:true});
     h += `<p class="hint full">주택연금처럼 비과세이고 정액으로 받는 소득을 넣는 칸입니다.</p>`;
   }
@@ -781,13 +910,15 @@ function replaceAll(ns){
 }
 /* ================= events ================= */
 function onClick(e){
+  if(fltOpen && !e.target.closest(".dd")){ fltOpen = false; const d = app().querySelector(".dd"); if(d){ d.classList.remove("open"); d.querySelector(".ddbtn").setAttribute("aria-expanded","false"); } }
   const el = e.target.closest("[data-act]"); if(!el) return;
   const act = el.dataset.act;
   if(act==="tab"){ if(view==="edit") draft=null; go(el.dataset.tab); return; }
   if(act==="scn"){ S.ui.scenario = el.dataset.v; animateChart = true; commitUi(); render(); return; }
   if(act==="real"){ S.ui.real = el.dataset.v==="1"; animateChart = true; commitUi(); render(); return; }
   if(act==="death"){ S.ui.deathAge = Math.max(40, Math.min(100, num(S.ui.deathAge)+num(el.dataset.d))); commitUi(); render(); return; }
-  if(act==="sel"){ S.ui.selAge = num(el.dataset.age); commitUi(); render(); return; }
+  if(act==="sel"){ selectAge(num(el.dataset.age)); commitUi(); return; }
+  if(act==="fltmenu"){ fltOpen = !fltOpen; const d = app().querySelector(".dd"); if(d){ d.classList.toggle("open", fltOpen); d.querySelector(".ddbtn").setAttribute("aria-expanded", fltOpen); } return; }
   if(act==="del"){ pendingDel = el.dataset.id; render(); return; }
   if(act==="delno"){ pendingDel = null; render(); return; }
   if(act==="delyes"){ const id = el.dataset.id; S.deleted = S.deleted||{}; S.deleted[id] = Date.now(); S.accounts = S.accounts.filter(a=>a.id!==id); pendingDel = null; commit(); render(); return; }
@@ -804,7 +935,23 @@ function onClick(e){
   if(act==="reset"){ pendingReset = true; render(); return; }
   if(act==="resetno"){ pendingReset = false; render(); return; }
   if(act==="resetyes"){ replaceAll(blankState()); pendingReset = false; commit(); render(); setStatus("모두 삭제했습니다."); return; }
+  if(act==="legend"){
+    S.ui.legendHidden = !S.ui.legendHidden; commitUi();
+    const lg = app().querySelector(".chartwrap .legend");
+    if(lg) lg.hidden = !!S.ui.legendHidden;
+    el.textContent = S.ui.legendHidden ? "범례 보기 ▾" : "범례 숨기기 ▴";
+    el.setAttribute("aria-expanded", String(!S.ui.legendHidden));
+    return;
+  }
   if(act==="savefile"){ saveFile(); return; }
+  if(act==="schadd"){ draft.schedule = draft.schedule||[]; const last = draft.schedule[draft.schedule.length-1]; draft.schedule.push({from: last && num(last.to) ? num(last.to)+1 : "", to:"", monthly:""}); render(); return; }
+  if(act==="schdel"){ draft.schedule.splice(num(el.dataset.i),1); render(); return; }
+  if(act==="flt"){
+    const id = el.dataset.id;
+    if(id==="all") S.ui.filter = null;
+    else { let f = S.ui.filter ? S.ui.filter.slice() : []; f = f.includes(id) ? f.filter(x=>x!==id) : f.concat(id); S.ui.filter = f.length ? f : null; }
+    fltOpen = true; animateChart = true; commitUi(); render(); return;
+  }
   if(act==="hhon"){ if(!dbH){ setStatus("계정 연결이 안 되어 가구 공유를 켤 수 없습니다."); return; } setMode("household"); attach(false); householdAvailable = true; render(); setStatus("가구 공유를 켰습니다. 공유 공간에 올리는 중…"); return; }
   if(act==="hhjoin"){ if(!dbH) return; setMode("household"); attach(true); render(); return; }
   if(act==="hhoff"){ setMode("private"); attach(false); render(); setStatus("이 기기는 개인 저장으로 돌아왔습니다. 가구 데이터는 그대로 남아 있어요."); return; }
@@ -859,6 +1006,7 @@ function importText(t){
 }
 function onInput(e){
   const el = e.target;
+  if(el.dataset.sch!==undefined && draft){ const r = draft.schedule[num(el.dataset.sch)]; if(r) r[el.dataset.sf] = el.value===""?"":+el.value; return; }
   if(el.dataset.file && e.type==="change"){
     const f = el.files && el.files[0]; if(!f) return;
     const r = new FileReader(); r.onload = ()=>importText(String(r.result)); r.onerror = ()=>setStatus("파일을 읽지 못했습니다."); r.readAsText(f);
