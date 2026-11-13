@@ -265,7 +265,10 @@ function flows(a){
     const amt = num(a.retireFuture), g = amt*Math.pow(1+i,m2);
     rt += amt; tx += g-amt; fv += g;
   }
-  const yrs = plan ? Math.max(1, planEnd - start + 1) : Math.max(1, num(a.payoutYears)||20), n = yrs*12;
+  const restYears = plan ? Math.max(0, a.restYears===undefined || a.restYears==="" ? 10 : num(a.restYears)) : 0;
+  const planYears = plan ? Math.max(1, planEnd - start + 1) : 0;
+  const yrs = plan ? planYears + restYears : Math.max(1, num(a.payoutYears)||20), n = yrs*12;
+  let Prest = 0, restStartBal = 0;
   // level payments, or (indexed) payments growing with inflation so they keep today's value
   const ga = infl(), ra = gy;
   const P = a.indexed
@@ -280,10 +283,13 @@ function flows(a){
   for(let k=0;k<yrs;k++){
     const bal = nd+rt+tx;
     let w;
-    if(plan){ // 나이 구간별 월 인출 계획 (현재가치 입력이면 그해 금액으로 환산)
+    if(plan && k<planYears){ // 나이 구간별 월 인출 계획 (현재가치 입력이면 그해 금액으로 환산)
       const age = start + k, row = plan.find(r=>age>=num(r.from) && age<=(num(r.to)||num(r.from)));
       const want = row ? num(row.monthly)*12*(a.planReal===false ? 1 : idx(birth(a.owner)+age)) : 0;
       w = Math.min(want, bal);
+    } else if(plan){ // 계획 이후 남은 잔액: restYears 동안 균등 수령
+      if(k===planYears){ restStartBal = bal; Prest = Math.abs(ra)<1e-9 ? bal/restYears : bal*ra/((1-Math.pow(1+ra,-restYears))*(1+ra)); }
+      w = k===yrs-1 ? bal : Math.min(Prest, bal);
     } else w = k===yrs-1 ? bal : Math.min(P*(a.indexed ? Math.pow(1+ga,k) : 1), bal);
     const yearNo = firstYearNo + k;
     const limit = yearNo<=10 ? bal/(11-yearNo)*1.2 : Infinity; // 연금수령한도 (whole account)
@@ -298,11 +304,12 @@ function flows(a){
     years.push({nonded:wn, retire:rP, retireX:rX, taxable:tP, taxableX:tX, total:wn+wr+wt, k, yearNo, remain:nd+rt+tx});
   }
   let exhaustAge = 0;
-  if(plan){ const kk = years.findIndex(y=>y.remain<1 && y.k<yrs-1); if(kk>=0) exhaustAge = start+kk; }
+  if(plan){ const kk = years.findIndex(y=>y.remain<1 && y.k<planYears-1); if(kk>=0) exhaustAge = start+kk; }
   const leftover = years.length ? years[years.length-1].remain : fv;
-  const r = {start, years, fv, plan:!!plan, exhaustAge, leftover, end: start+yrs-1,
+  const planLeft = plan && years[planYears-1] ? years[planYears-1].remain : 0;
+  const r = {start, years, fv, plan:!!plan, exhaustAge, leftover, planLeft, planEnd, restYears, restMonthly: Prest/12, end: start+yrs-1,
     valueAtAge(age){ // rough account value at owner's age (for lump-sum on death)
-      if(age>=start){ const k=age-start-1; return k<0? fv : (years[k]? years[k].remain : 0); }
+      if(age>=start){ const k=age-start-1; if(k<0) return fv; if(years[k]) return years[k].remain; const last = years[years.length-1]; return last ? last.remain*Math.pow(1+gy, k-years.length+1) : 0; }
       const m = Math.max(0,(age-now)*12), mc = Math.min(m, nC);
       let v = balanceNow(a)*Math.pow(1+i,m) + (i? c*(Math.pow(1+i,mc)-1)/i : c*mc)*Math.pow(1+i,m-mc);
       if(a.type==="irp" && age>=(num(a.retireAge)||60)) v += num(a.retireFuture);
@@ -687,7 +694,7 @@ function partsLine(x, age, d){
   if(p.taxable>0) bits.push(`운용수익·공제받은 납입 ${m(p.taxable)} 연금소득세 (${x.tag==="승계"?"승계인 기준 ":""}1,500만원 판정 대상)`);
   if(p.retireX>0) bits.push(`한도 초과 퇴직금 ${m(p.retireX)} 퇴직소득세 100%`);
   if(p.taxableX>0) bits.push(`한도 초과 운용수익 ${m(p.taxableX)} 16.5%`);
-  return `<li class="sub"><span class="small muted">${bits.join("<br>")}${p.yearNo<=10?`<br>연금수령 ${p.yearNo}년차`:""}</span></li>`;
+  return `<li class="sub"><span class="small muted">${bits.join("<br>")}${p.yearNo<=10?`<br>연금수령 ${p.yearNo}년차`:""}<br>연말 잔액 약 ${man(p.remain/d)}</span></li>`;
 }
 const mw = v => Math.round(v/10000).toLocaleString();
 function niceMax(v){ const p=Math.pow(10,Math.floor(Math.log10(v))), f=v/p; return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p; }
@@ -757,7 +764,7 @@ function summary(a){
       ? `<br>구간별 인출 계획 ${f.start}~${f.end}세, 첫해 월 ${man((f.years[0]||{total:0}).total/12)} (세전, 그해 금액)`
       : `<br>${a.startAge}세부터 ${a.payoutYears||20}년${a.indexed?", 물가연동":""}, 첫해 월 ${man((f.years[0]||{total:0}).total/12)} (세전, 그해 금액)`;
     if(f.plan && f.exhaustAge) flag = `인출 계획대로면 ${f.exhaustAge}세에 잔고가 바닥납니다. 이후 구간은 받을 돈이 없어요.`;
-    else if(f.plan && f.leftover>1e6) flag = `계획이 끝나는 ${f.end}세에 약 ${man(f.leftover)}이 남습니다. 남은 돈은 차트에 나타나지 않으니 구간을 늘리거나 금액을 조정하세요.`;
+    else if(f.plan && f.planLeft>1e6 && !f.restYears) flag = `계획이 끝난 ${f.planEnd}세 말에 약 ${man(f.planLeft)}이 남아 인출하지 않습니다. 남은 잔액 수령 기간을 넣으면 그 뒤에 나눠 받는 것으로 계산해요.`;
     if(a.type==="irp" && num(a.retireFuture)) meta += `<br>${a.retireAge||60}세 퇴직금 ${man(num(a.retireFuture))} 이전 예정`;
     meta += ` / 사망 시 ${od==="inherit"?"배우자 승계":"일시금"}`;
     const over = f.years.filter(r=>r.retireX+r.taxableX>1);
@@ -831,7 +838,10 @@ function planPreview(d){
   if(!f.plan) return "구간을 입력하면 결과가 여기에 나타납니다.";
   const over = f.years.filter(r=>r.retireX+r.taxableX>1).length;
   let t = `→ ${f.start}세 적립금 약 ${man(f.fv)} (그해 금액). `;
-  t += f.exhaustAge ? `<b style="color:var(--warn)">${f.exhaustAge}세에 잔고가 바닥납니다.</b> ` : f.leftover>1e4 ? `계획이 끝나는 ${f.end}세에 약 ${man(f.leftover)}이 남습니다. ` : `계획대로 모두 인출됩니다. `;
+  if(f.exhaustAge) t += `<b style="color:var(--warn)">${f.exhaustAge}세에 잔고가 바닥납니다.</b> `;
+  else if(f.planLeft>1e4 && f.restYears>0) t += `계획이 끝난 ${f.planEnd}세 말 잔액 약 ${man(f.planLeft)}은 ${f.planEnd+1}~${f.planEnd+f.restYears}세에 월 약 ${man(f.restMonthly)}씩 나눠 받습니다. `;
+  else if(f.planLeft>1e4) t += `계획이 끝난 ${f.planEnd}세 말 잔액 약 ${man(f.planLeft)}은 인출하지 않고 남겨 둡니다(사망 시 상속 계산에 반영). `;
+  else t += `계획 기간 안에 모두 인출됩니다. `;
   if(over) t += `<b style="color:var(--warn)">연금수령한도를 넘는 해가 ${over}번 있어 그만큼 세금이 늘어납니다.</b>`;
   return t;
 }
@@ -863,6 +873,7 @@ function viewEdit(){
     if(a.payMode2==="plan"){
       h += scheduleEditor(a, "(원)", "나이 구간별로 매달 빼 쓸 금액을 적으세요. 예: 60~64세 200만원(국민연금 전), 65~79세 80만원. 끝 나이를 비우면 그 한 해만 인출합니다.");
       h += CHK("월 인출액을 현재가치로 입력 (매년 물가만큼 늘려 인출)","planReal",true);
+      h += F("계획 후 남은 잔액 수령 기간 (년, 0=남겨 둠)","restYears",{def:10,full:true});
       h += `<p class="hint full num" data-preview="1">${planPreview(a)}</p>`;
     } else {
       h += F("수령 개시 나이","startAge",{def:60}) + F("수령 기간 (년)","payoutYears",{def:20});
