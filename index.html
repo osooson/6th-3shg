@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>우리집 연금 소득</title>
+<meta name="theme-color" content="#EDF1F4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1A25" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="연금 소득">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -37,6 +43,8 @@ button{cursor:pointer;touch-action:manipulation}
 
 header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);border-bottom:1px solid var(--line)}
 .hwrap{max-width:720px;margin:0 auto;padding:10px 16px 0;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+/* home-screen app: keep the header below the system's blurred status-bar edge */
+@media (display-mode: standalone){ .hwrap{padding-top:24px} }
 .brand{font-weight:700;font-size:16px;padding-bottom:10px}
 nav{display:flex;gap:2px}
 nav button{border:0;background:none;padding:8px 12px 10px;font-size:15px;color:var(--muted);border-bottom:3px solid transparent}
