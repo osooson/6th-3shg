@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>우리집 연금 소득</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EDF1F4; --sheet:#FFFFFF; --ink:#15283C; --muted:#5B6B7B; --line:#CBD5DE;
+  --self:#2E8B57; --spouse:#D4688F; --tax:#B3BDC7; --taxbar:#8C99A6; --warn:#B4441F; --warnbg:#FBEDE7; --accent:#D3921A;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0F1A25; --sheet:#172636; --ink:#E4ECF3; --muted:#93A4B4; --line:#2A3D50;
+    --self:#6CC28F; --spouse:#F28DB2; --tax:#3C4E60; --taxbar:#7D8B99; --warn:#F08A63; --warnbg:#3A2219; --accent:#E8AE42;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0F1A25; --sheet:#172636; --ink:#E4ECF3; --muted:#93A4B4; --line:#2A3D50;
+  --self:#6CC28F; --spouse:#F28DB2; --tax:#3C4E60; --taxbar:#7D8B99; --warn:#F08A63; --warnbg:#3A2219; --accent:#E8AE42;
+  color-scheme:dark;
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 56px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;touch-action:manipulation}
+:focus-visible{outline:2px solid var(--self);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);border-bottom:1px solid var(--line)}
+.hwrap{max-width:720px;margin:0 auto;padding:10px 16px 0;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.brand{font-weight:700;font-size:16px;padding-bottom:10px}
+nav{display:flex;gap:2px}
+nav button{border:0;background:none;padding:8px 12px 10px;font-size:15px;color:var(--muted);border-bottom:3px solid transparent}
+nav button[aria-current="page"]{color:var(--ink);font-weight:600;border-bottom-color:var(--ink)}
+main{max-width:720px;margin:0 auto;padding:18px 16px 96px}
+h2{font-size:17px;margin:0}
+h3{font-size:15px;margin:0}
+.muted{color:var(--muted)}
+.small{font-size:12.5px}
+.hint{font-size:12.5px;color:var(--muted);margin:6px 0 0}
+
+/* segmented */
+.seg{display:flex;background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:none;border-radius:7px;padding:8px 6px;font-size:14px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper);font-weight:600}
+.controls{display:grid;gap:10px;margin-bottom:18px}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:36px;height:36px;border:1px solid var(--line);background:var(--sheet);border-radius:8px;font-size:18px;line-height:1}
+.stepper input{width:64px;text-align:center;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--sheet);font-size:16px}
+
+/* hero */
+.lead{font-size:clamp(20px,5.2vw,27px);line-height:1.4;margin:0 0 4px;font-weight:500}
+.lead .amt{font-size:1.5em;font-weight:700}
+.chartwrap{background:var(--sheet);border:1px solid var(--line);border-radius:14px;padding:10px 6px 4px;margin-top:12px}
+svg.chart{display:block;width:100%;height:auto}
+@keyframes barGrow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+svg.chart.anim .bar{transform-box:fill-box;transform-origin:50% 100%;animation:barGrow .5s cubic-bezier(.2,.7,.3,1) both}
+svg.chart.anim .baseline{animation:fadeIn .4s ease both}
+@media (prefers-reduced-motion:reduce){svg.chart.anim .bar,svg.chart.anim .baseline{animation:none}}
+svg.chart text{fill:var(--muted);font-size:9px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;padding:6px 8px 4px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.legend i.line{height:0;border-top:2px dashed var(--ink);border-radius:0;vertical-align:3px}
+.callout{margin-top:12px;background:var(--warnbg);color:var(--warn);border-radius:10px;padding:10px 12px;font-size:13.5px;line-height:1.55}
+.callout.info{background:var(--sheet);color:var(--ink);border:1px solid var(--line)}
+
+.items{list-style:none;margin:14px 0 0;padding:0}
+.items li{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.items li:last-child{border-bottom:0}
+.items li.sub{border-bottom:1px dashed var(--line);padding:0 0 8px;margin-top:-4px}
+.items li:has(+ li.sub){border-bottom:0}
+.items .tag{font-size:12px;color:var(--muted);margin-left:6px}
+.items .r{text-align:right;white-space:nowrap}
+.items .r small{display:block;color:var(--muted);font-size:11.5px}
+
+section{margin-top:28px}
+.tablewrap{overflow:auto;max-height:420px;border:1px solid var(--line);border-radius:10px;background:var(--sheet);margin-top:10px}
+table{border-collapse:collapse;width:100%;font-size:13px;table-layout:fixed}
+th,td{padding:7px 6px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+th:first-child,td:first-child{width:27%}
+td small,th small{display:block;font-size:10.5px;font-weight:400;color:var(--muted)}
+th{position:sticky;top:0;background:var(--sheet);font-weight:600;color:var(--muted);font-size:12px;z-index:1}
+th:first-child,td:first-child{text-align:left}
+tr.sel td{background:var(--paper);font-weight:700}
+tr.dead td:first-child{color:var(--warn)}
+tbody tr{cursor:pointer}
+
+/* accounts */
+.owner{margin-top:26px}
+.owner:first-child{margin-top:0}
+.ohead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.card{background:var(--sheet);border:1px solid var(--line);border-left:5px solid var(--c);border-radius:10px;padding:12px 12px 10px 14px;margin-bottom:8px}
+.card .top{display:flex;justify-content:space-between;gap:10px}
+.card .name{font-weight:600}
+.card .val{font-weight:600;white-space:nowrap}
+.card .meta{font-size:12.5px;color:var(--muted);margin-top:2px}
+.card .acts{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
+.btn{border:1px solid var(--line);background:var(--sheet);border-radius:8px;padding:8px 14px;font-size:14px}
+.btn.sm{padding:5px 12px;font-size:13px}
+.btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink);font-weight:600}
+.btn.danger{color:var(--warn)}
+.btn.dangerfill{background:var(--warn);color:#fff;border-color:var(--warn)}
+.confirm{margin-top:8px;background:var(--warnbg);color:var(--warn);border-radius:8px;padding:8px 8px 8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:13.5px;font-weight:600}
+.confirm div{display:flex;gap:6px}
+.flag{margin-top:8px;background:var(--warnbg);color:var(--warn);border-radius:6px;padding:7px 10px;font-size:12.5px}
+.empty{border:1.5px dashed var(--line);border-radius:10px;padding:14px;color:var(--muted);font-size:14px}
+.add{border:0;background:none;color:var(--self);font-weight:600;padding:8px 2px}
+
+/* form */
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form .full{grid-column:1/-1}
+.form h3{grid-column:1/-1;margin-top:8px;padding-top:12px;border-top:1px solid var(--line)}
+label{display:block;font-size:12.5px;color:var(--muted)}
+label input:not([type=checkbox]),label select,textarea{display:block;width:100%;margin-top:3px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--sheet);font-size:16px;color:var(--ink)}
+label .conv{display:block;font-size:11.5px;margin-top:2px;height:16px;line-height:16px;overflow:hidden}
+label.chk{display:flex;align-items:center;gap:8px;color:var(--ink);font-size:14px}
+.back{border:0;background:none;color:var(--self);font-weight:600;padding:4px 0 12px;font-size:15px}
+.footbar{position:sticky;bottom:0;margin:18px -16px 0;padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 12px);background:var(--paper);border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}
+.settings{background:var(--sheet);border:1px solid var(--line);border-radius:12px;padding:14px}
+#errbar{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);z-index:20;background:var(--warn);color:#fff;border-radius:10px;padding:10px 12px;font-size:13px;display:none}
+#errbar button{float:right;border:0;background:none;color:#fff;font-weight:700}
+@media (max-width:400px){ nav button{padding:8px 9px 10px} }
+</style>
+</head>
+<body>
+<header><div class="hwrap"><span class="brand">우리집 연금 소득</span>
+<nav aria-label="화면"><button type="button" data-tab="flow">흐름</button><button type="button" data-tab="accounts">계좌</button><button type="button" data-tab="settings">가정</button></nav></div></header>
+<main id="app"></main>
+<div id="errbar" role="alert"></div>
+<script>
+"use strict";
+/* ================= error banner ================= */
+window.addEventListener("error", e=>showErr(e.message));
+window.addEventListener("unhandledrejection", e=>showErr(e.reason && e.reason.message || String(e.reason)));
+function showErr(msg){
+  const b = document.getElementById("errbar"); if(!b) return;
+  b.innerHTML = `<button type="button" aria-label="닫기">×</button>오류가 생겼습니다: ${esc(msg)}`;
+  b.style.display = "block";
+  b.querySelector("button").onclick = ()=>{ b.style.display="none"; };
+}
+
+/* ================= constants ================= */
+const YEAR = new Date().getFullYear();
+const OWN = {self:"본인", spouse:"배우자"};
+const other = o => o==="self" ? "spouse" : "self";
+const TYPES = {
+  nps:  {label:"국민연금"},
+  ps:   {label:"연금저축", invest:true},
+  irp:  {label:"IRP", invest:true},
+  dc:   {label:"퇴직연금 DC", invest:true},
+  annK: {label:"연금보험(원화)", annuity:true},
+  annU: {label:"연금보험(달러)", annuity:true, usd:true},
+  etc:  {label:"기타(주택연금 등)"}
+};
+const DEFAULT_DEATH = {ps:"inherit", irp:"lump", dc:"lump", annK:"stop", annU:"stop", etc:"spouse"};
+
+/* ================= state ================= */
+function blankState(){
+  return {settings:{birthSelf:1970, birthSpouse:1972, rate:4, inflation:2, fx:1400, confirmed:false},
+          accounts:[], deleted:{}, settingsAt:0, ui:{scenario:"both", deathAge:80, real:true, selAge:65}};
+}
+let S = blankState();
+let view = "flow", draft = null, pendingDel = null, pendingReset = false, animateChart = true;
+const uid = ()=>Math.random().toString(36).slice(2,10);
+const num = v => (v===""||v==null||isNaN(+v)) ? 0 : +v;
+const birth = o => num(o==="self"?S.settings.birthSelf:S.settings.birthSpouse);
+const ageNow = o => YEAR - birth(o);
+
+function sampleState(){
+  const s = blankState();
+  s.settings.confirmed = true;
+  s.accounts = [
+    {id:uid(),owner:"self",type:"nps",name:"국민연금",months:360,monthly:1650000,startAge:65,taxRatio:85},
+    {id:uid(),owner:"self",type:"ps",name:"연금저축",institution:"증권사",paid:30000000,earn:12000000,contrib:500000,contribUntil:60,nondeduct:5000000,startAge:60,payoutYears:20,onDeath:"inherit"},
+    {id:uid(),owner:"self",type:"irp",name:"IRP",institution:"증권사",paid:15000000,earn:4000000,contrib:250000,contribUntil:60,retireFuture:150000000,retireAge:60,retireRate:4,startAge:60,payoutYears:20,onDeath:"lump"},
+    {id:uid(),owner:"spouse",type:"nps",name:"국민연금",months:120,monthly:350000,startAge:65,taxRatio:100},
+    {id:uid(),owner:"spouse",type:"annK",name:"연금보험",payMode:"monthly",premium:500000,payYears:5,monthly:330000,startAge:65,payoutYears:0,taxFree:true,onDeath:"stop"},
+    {id:uid(),owner:"spouse",type:"annU",name:"달러연금보험",payMode:"lump",premium:50000,monthly:220,startAge:65,payoutYears:0,taxFree:true,onDeath:"stop"}
+  ];
+  return s;
+}
+
+/* ================= money ================= */
+const fx = ()=>num(S.settings.fx)||1400;
+const infl = ()=>num(S.settings.inflation)/100;
+const idx = y => Math.pow(1+infl(), y-YEAR);
+function man(v){
+  const m = Math.round(v/10000);
+  if(Math.abs(m)>=10000){ const e=Math.trunc(m/10000), r=Math.abs(m%10000); return e+"억"+(r? " "+r.toLocaleString()+"만":"")+"원"; }
+  return m.toLocaleString()+"만원";
+}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+
+/* ================= invest account projection ================= */
+const flowCache = new Map();
+function balanceNow(a){
+  const t = TYPES[a.type];
+  if(t.invest) return num(a.paid)+num(a.earn);
+  if(t.annuity) return (num(a.paid)+num(a.earn))*(t.usd?fx():1);
+  return 0;
+}
+function flows(a){
+  if(flowCache.has(a.id)) return flowCache.get(a.id);
+  const i = num(a.rate!==undefined && a.rate!=="" ? a.rate : S.settings.rate)/100/12, gy = Math.pow(1+i,12)-1;
+  const now = ageNow(a.owner), start = num(a.startAge)||60;
+  const cEnd = Math.min(num(a.contribUntil)||start, start);
+  const nAcc = Math.max(0,(start-now)*12), nC = Math.max(0,(cEnd-now)*12), c = num(a.contrib);
+  // contributions until cEnd, then grow to start
+  let fvC = i ? c*(Math.pow(1+i,nC)-1)/i : c*nC; fvC *= Math.pow(1+i, nAcc-nC);
+  let fv = balanceNow(a)*Math.pow(1+i,nAcc) + fvC;
+  let nd = a.type==="dc" ? 0 : num(a.nondeduct) + (a.contribDeduct===false ? c*nC : 0);
+  let rt = a.type==="dc" ? fv : a.type==="irp" ? num(a.retire) : 0;
+  if(nd+rt>fv && fv>0){ const k=fv/(nd+rt); nd*=k; rt*=k; }
+  let tx = Math.max(0, fv-nd-rt);
+  if(a.type==="irp" && num(a.retireFuture)>0){
+    const ra = Math.max(num(a.retireAge)||60, now), m2 = Math.max(0,(start-ra)*12);
+    const amt = num(a.retireFuture), g = amt*Math.pow(1+i,m2);
+    rt += amt; tx += g-amt; fv += g;
+  }
+  const yrs = Math.max(1, num(a.payoutYears)||20), n = yrs*12;
+  const P = 12*(i ? fv*i/(1-Math.pow(1+i,-n)) : fv/n);
+  const years = [];
+  // 연금수령연차: year 1 = first year the account is eligible (age 55+ and 5 years since opening); old-plan 퇴직금 starts at 6
+  const openAge = num(a.openYear) ? num(a.openYear) - birth(a.owner) : 0;
+  const eligAge = Math.max(55, openAge + 5);
+  const firstYearNo = a.oldPlan ? Math.max(6, start - eligAge + 1) : Math.max(1, start - eligAge + 1);
+  for(let k=0;k<yrs;k++){
+    const bal = nd+rt+tx; let w = k===yrs-1 ? bal : Math.min(P,bal);
+    const yearNo = firstYearNo + k;
+    const limit = yearNo<=10 ? bal/(11-yearNo)*1.2 : Infinity; // 연금수령한도 (whole account)
+    let inLim = Math.min(w, limit);
+    const take = v=>{ const t=Math.min(v,w); w-=t; return t; };
+    // within-limit portion first, then excess (연금외수령); buckets in legal order
+    const split = amt=>{ const pIn = Math.min(amt, inLim); inLim -= pIn; return [pIn, amt-pIn]; };
+    const wn=take(nd); nd-=wn; const [nP,nX]=split(wn);
+    const wr=take(rt); rt-=wr; const [rP,rX]=split(wr);
+    const wt=take(tx); tx-=wt; const [tP,tX]=split(wt);
+    tx += (nd+rt+tx)*gy;
+    years.push({nonded:wn, retire:rP, retireX:rX, taxable:tP, taxableX:tX, total:wn+wr+wt, k, yearNo, remain:nd+rt+tx});
+  }
+  const r = {start, years, fv,
+    valueAtAge(age){ // rough account value at owner's age (for lump-sum on death)
+      if(age>=start){ const k=age-start-1; return k<0? fv : (years[k]? years[k].remain : 0); }
+      const m = Math.max(0,(age-now)*12), mc = Math.min(m, nC);
+      let v = balanceNow(a)*Math.pow(1+i,m) + (i? c*(Math.pow(1+i,mc)-1)/i : c*mc)*Math.pow(1+i,m-mc);
+      if(a.type==="irp" && age>=(num(a.retireAge)||60)) v += num(a.retireFuture);
+      return v;
+    }};
+  flowCache.set(a.id, r); return r;
+}
+
+/* gross annual income of account a in year y as if owner alive (nominal KRW) */
+function acctYear(a, y){
+  const t = TYPES[a.type], age = y - birth(a.owner), start = num(a.startAge)||65;
+  const z = {gross:0, privTaxable:0, pubTaxable:0, retireTax:0};
+  if(age < start) return z;
+  if(t.invest){
+    const row = flows(a).years[age-start]; if(!row) return z;
+    z.gross = row.total; z.privTaxable = row.taxable;
+    const rr = num(a.retireRate??4)/100;
+    z.retireTax = row.retire*rr*(row.k<10?0.7:0.6)   // 퇴직금 원금, 연금수령: 퇴직소득세 70%(11년차부터 60%)
+                + row.retireX*rr                     // 한도 초과: 퇴직소득세 100%
+                + row.taxableX*0.165;                // 한도 초과 운용수익 등: 기타소득 16.5%
+    z.parts = row;
+  } else if(a.type==="nps"){
+    if(num(a.months)>=120){ z.gross = num(a.monthly)*12*idx(y); z.pubTaxable = z.gross*num(a.taxRatio??100)/100; }
+  } else {
+    let monthly = num(a.monthly), yrs = num(a.payoutYears);
+    if(t.annuity && a.calcMode==="auto"){ const c = annuityCalc(a); monthly = c.monthly; yrs = c.years; }
+    if(yrs && age>=start+yrs) return z;
+    z.gross = monthly*12*(t.usd?fx():1);
+  }
+  return z;
+}
+
+/* ================= tax (2026 rules, estimate) ================= */
+function pensionDeduction(x){
+  const d = x<=3.5e6 ? x : x<=7e6 ? 3.5e6+(x-3.5e6)*.4 : x<=1.4e7 ? 4.9e6+(x-7e6)*.2 : 6.3e6+(x-1.4e7)*.1;
+  return Math.min(d, 9e6);
+}
+const BR=[[1.4e7,.06],[5e7,.15],[8.8e7,.24],[1.5e8,.35],[3e8,.38],[5e8,.40],[1e9,.42],[Infinity,.45]];
+function incomeTax(b){ let t=0,p=0; for(const [c,r] of BR){ if(b<=p) break; t+=(Math.min(b,c)-p)*r; p=c; } return t; }
+function compTax(inc){ if(inc<=0) return 0; const base=Math.max(0,inc-pensionDeduction(inc)-1.5e6); return Math.max(0,incomeTax(base)-7e4)*1.1; }
+const lowRate = age => age<70?.055:age<80?.044:.033;
+function personTax(items, age){
+  const PT = items.reduce((s,x)=>s+x.privTaxable,0), PU = items.reduce((s,x)=>s+x.pubTaxable,0);
+  let priv, pub, method="none";
+  if(PT<=1.5e7){ priv = PT*lowRate(age); pub = compTax(PU); if(PT>0) method="low"; }
+  else { const sep = PT*.165+compTax(PU), comp = compTax(PU+PT);
+    if(sep<=comp){ method="sep"; priv=PT*.165; pub=compTax(PU); }
+    else { method="comp"; priv=comp*PT/(PU+PT); pub=comp-priv; } }
+  items.forEach(x=>{ x.tax = x.retireTax + (PT? priv*x.privTaxable/PT : 0) + (PU? pub*x.pubTaxable/PU : 0); });
+  return {PT, PU, method};
+}
+
+/* ================= scenario simulation ================= */
+function survivorRate(m){ return m>=240?.6 : m>=120?.5 : .4; }
+function simulate(scn){
+  const dead = scn==="self"||scn==="spouse" ? scn : null;
+  const deathYear = dead ? birth(dead)+num(S.ui.deathAge) : Infinity;
+  const a0 = Math.max(ageNow("self"),50), a1 = 100, rows = [];
+  for(let ageS=a0; ageS<=a1; ageS++){
+    const y = birth("self")+ageS;
+    const alive = o => !(dead===o && y>=deathYear);
+    const items = {self:[], spouse:[]}; const notes = [];
+    for(const a of S.accounts){
+      const o = a.owner, t = TYPES[a.type];
+      if(alive(o)){
+        if(a.type==="nps" && dead && !alive(other(o))) continue; // survivor NPS handled below
+        const z = acctYear(a,y); if(z.gross>0) items[o].push({a, name:a.name, tag:"", ...z});
+        continue;
+      }
+      if(!alive(other(o)) || a.type==="nps") continue;
+      const od = a.onDeath || DEFAULT_DEATH[a.type];
+      if(t.invest){
+        if(od==="inherit"){ const z = acctYear(a,y); if(z.gross>0) items[other(o)].push({a, name:a.name, tag:"승계", ...z}); }
+        else if(y===deathYear){ const v = flows(a).valueAtAge(num(S.ui.deathAge)); if(v>0) notes.push(`${a.name}: 연금 대신 일시금 약 ${man(v)} 상속`); }
+      } else if(od==="spouse"){
+        const z = acctYear(a,y); if(z.gross>0) items[other(o)].push({a, name:a.name, tag:"배우자 계속", ...z});
+      }
+    }
+    if(dead && y>=deathYear){
+      const s = other(dead);
+      const dn = S.accounts.find(a=>a.owner===dead && a.type==="nps");
+      const sn = S.accounts.find(a=>a.owner===s && a.type==="nps");
+      let surv = 0;
+      if(dn && num(dn.months)>=120){
+        surv = (num(dn.survivorMonthly) || num(dn.monthly)*survivorRate(num(dn.months)))*12*idx(y);
+      }
+      const own = sn ? acctYear(sn,y) : {gross:0,pubTaxable:0};
+      if(surv>0 || own.gross>0){
+        if(own.gross>0 && own.gross+0.3*surv >= surv){
+          items[s].push({a:sn, name:sn.name, tag:"", ...own, privTaxable:0, retireTax:0});
+          if(surv>0) items[s].push({a:dn, name:"유족연금 30%", tag:"비과세", gross:0.3*surv, privTaxable:0, pubTaxable:0, retireTax:0});
+        } else if(surv>0){
+          items[s].push({a:dn, name:"유족연금", tag:own.gross>0?"본인 연금 대신 선택, 비과세":"비과세", gross:surv, privTaxable:0, pubTaxable:0, retireTax:0});
+        }
+      }
+    }
+    const tax = {};
+    for(const o of ["self","spouse"]) tax[o] = personTax(items[o], y-birth(o));
+    const sum = (o,f)=>items[o].reduce((s,x)=>s+f(x),0);
+    const d = S.ui.real ? idx(y) : 1;
+    const r = {ageS, ageP:y-birth("spouse"), y, alive:{self:alive("self"), spouse:alive("spouse")}, items, tax, notes,
+      net:{self:sum("self",x=>x.gross-x.tax)/12/d, spouse:sum("spouse",x=>x.gross-x.tax)/12/d},
+      taxM:(sum("self",x=>x.tax)+sum("spouse",x=>x.tax))/12/d, d};
+    r.total = r.net.self + r.net.spouse; r.gross = r.total + r.taxM;
+    rows.push(r);
+  }
+  return rows;
+}
+
+/* ================= persistence ================= */
+const LS = "household-pension-v2";
+let docRef = null, saveTimer = null, writing = false, pendingWrite = false, lastWritten = "";
+function setStatus(t){ S._status = t; const el = document.getElementById("status"); if(el) el.textContent = t; }
+/* shared part = what syncs between devices; ui (scenario, selected age) stays per device */
+function sharedPart(st){ return {settings:st.settings||{}, accounts:st.accounts||[], deleted:st.deleted||{}, settingsAt:num(st.settingsAt)}; }
+function saveLocal(){ try{ const d = JSON.parse(JSON.stringify(S)); delete d._status; localStorage.setItem(LS, JSON.stringify(d)); }catch{} }
+function commitUi(){ saveLocal(); }
+function commit(){ flowCache.clear(); saveLocal(); clearTimeout(saveTimer); saveTimer = setTimeout(persist, 600); }
+async function persist(){
+  if(!docRef){ setStatus("이 기기에 저장됨"); return; }
+  if(writing){ pendingWrite = true; return; }
+  writing = true;
+  try{
+    const data = sharedPart(S), js = JSON.stringify(data);
+    if(js!==lastWritten){ await docRef.set({shared:JSON.parse(js)}); lastWritten = js; }
+    setStatus(mode==="household" ? "가구 공유 데이터에 저장됨" : "내 계정에 저장됨");
+  }catch(e){
+    const c = e && e.code;
+    setStatus(mode==="household" && (c==="permission-denied"||c==="forbidden"||/permission|denied|forbidden/i.test(String(e&&e.message)))
+      ? "가구 데이터를 고칠 권한이 없어 이 기기에만 저장했습니다. 아티팩트 공유 메뉴에서 편집자로 초대받아야 합니다."
+      : "이 기기에만 저장됨 (계정 저장 실패)");
+  }
+  writing = false;
+  if(pendingWrite){ pendingWrite = false; persist(); }
+}
+/* merge remote into local: per-account newest wins, deletions are remembered */
+function mergeShared(remote){
+  const del = Object.assign({}, remote.deleted||{});
+  for(const [k,v] of Object.entries(S.deleted||{})) del[k] = Math.max(num(v), num(del[k]));
+  const map = new Map();
+  for(const a of [...(remote.accounts||[]), ...(S.accounts||[])]){ const p = map.get(a.id); if(!p || num(a.updatedAt) >= num(p.updatedAt)) map.set(a.id, a); }
+  const order = [...(S.accounts||[]).map(a=>a.id), ...(remote.accounts||[]).map(a=>a.id)], seen = new Set(), accts = [];
+  for(const id of order){ if(seen.has(id)) continue; seen.add(id); const a = map.get(id); if(a && !(del[id] && num(del[id]) >= num(a.updatedAt))) accts.push(a); }
+  const before = JSON.stringify(sharedPart(S));
+  if(num(remote.settingsAt) > num(S.settingsAt) || (!num(S.settingsAt) && !S.settings.confirmed && remote.settings && remote.settings.birthSelf)){ S.settings = Object.assign({}, S.settings, remote.settings); S.settingsAt = Math.max(num(remote.settingsAt), num(S.settingsAt)); }
+  S.accounts = accts; S.deleted = del;
+  const after = JSON.stringify(sharedPart(S));
+  return {changed: before!==after, needsPush: after!==JSON.stringify(sharedPart(remote))};
+}
+function loadLocal(){ try{ const l = localStorage.getItem(LS); if(l){ const d = JSON.parse(l); if(d && d.accounts) S = Object.assign(blankState(), d); } }catch{} }
+/* ---------- private (per account) or household (shared with invited editors) ---------- */
+const HH = "households/main";
+let dbH = null, userId = null, unsub = null, householdAvailable = false;
+let mode = (()=>{ try{ return localStorage.getItem("hp-mode")||"private"; }catch{ return "private"; } })();
+function setMode(m){ mode = m; try{ localStorage.setItem("hp-mode", m); }catch{} }
+function replaceShared(remote){
+  S.accounts = (remote.accounts||[]).map(a=>Object.assign({}, a));
+  S.settings = Object.assign({}, blankState().settings, remote.settings||{});
+  S.deleted = Object.assign({}, remote.deleted||{}); S.settingsAt = num(remote.settingsAt);
+  flowCache.clear(); saveLocal(); animateChart = true;
+}
+function attach(replace){
+  if(!dbH) return;
+  if(typeof unsub==="function"){ try{ unsub(); }catch{} }
+  docRef = dbH.doc(mode==="household" ? HH : `data/users/${userId}/pension-v2`);
+  lastWritten = ""; let first = true;
+  unsub = docRef.onSnapshot(snap=>{
+    const d = snap && snap.exists ? (snap.data()||{}) : null;
+    const remote = d && (d.shared || d.state);
+    if(first && replace && remote){ first = false; replaceShared(remote); lastWritten = JSON.stringify(sharedPart(S)); if(view!=="edit") render(); setStatus("가구 공유 데이터를 불러왔습니다."); return; }
+    first = false;
+    if(!remote){ clearTimeout(saveTimer); saveTimer = setTimeout(persist, 600); return; }
+    const r = mergeShared(remote);
+    if(r.changed){ flowCache.clear(); saveLocal(); if(view!=="edit") render(); }
+    if(r.needsPush){ clearTimeout(saveTimer); saveTimer = setTimeout(persist, 600); }
+    else { lastWritten = JSON.stringify(sharedPart(S)); setStatus(mode==="household" ? "가구 공유 데이터와 동기화됨" : "내 계정과 동기화됨"); }
+  }, ()=>{ setStatus(mode==="household" ? "가구 공유 데이터를 읽을 수 없습니다. 편집자로 초대받았는지 확인하세요." : "계정 연결이 끊겨 이 기기에만 저장 중"); });
+}
+async function probeHousehold(){
+  if(!dbH || mode==="household") return;
+  try{
+    const snap = await dbH.doc(HH).get();
+    householdAvailable = !!(snap && snap.exists);
+    if(householdAvailable && !S.accounts.length){ setMode("household"); attach(true); return; }  // spouse opening for the first time
+    if(householdAvailable && view==="settings") render();
+  }catch{ householdAvailable = false; }
+}
+async function connectDb(){
+  try{
+    if(!window.claude || !window.claude.use) return;
+    const db = await window.claude.use("db"), user = await window.claude.use("user");
+    if(!db || !user) return;
+    const id = await user.id(); if(!id) return;
+    dbH = db; userId = id;
+    attach(false);
+    probeHousehold();
+  }catch(e){ setStatus("이 기기에 저장됨"); }
+}
+
+/* ================= rendering ================= */
+const app = ()=>document.getElementById("app");
+function render(){
+  flowCache.clear();
+  document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-current", b.dataset.tab===(view==="edit"?"accounts":view) ? "page":"false"));
+  const h = view==="flow" ? viewFlow() : view==="accounts" ? viewAccounts() : view==="edit" ? viewEdit() : viewSettings();
+  app().innerHTML = h;
+}
+function go(v){ view = v; pendingDel = null; pendingReset = false; if(v==="flow") animateChart = true; render(); window.scrollTo(0,0); }
+
+/* ---------- flow view ---------- */
+function viewFlow(){
+  const ui = S.ui;
+  let h = "";
+  if(!S.settings.confirmed) h += `<div class="callout info" style="margin:0 0 14px">출생연도가 기본값(본인 ${S.settings.birthSelf}년, 배우자 ${S.settings.birthSpouse}년)입니다. <button type="button" class="add" data-act="tab" data-tab="settings" style="padding:0">가정 탭에서 확인하기</button></div>`;
+  if(!S.accounts.length){
+    return h + `<div class="empty">아직 등록된 연금이 없습니다. <button type="button" class="add" data-act="tab" data-tab="accounts" style="padding:0">계좌 탭</button>에서 국민연금, 연금저축, IRP, 연금보험을 추가하면 나이별 실제 소득이 여기에 나타납니다. 미리 보려면 가정 탭의 “예시로 채워보기”를 누르세요.</div>`;
+  }
+  h += `<div class="controls">
+    <div class="seg" role="group" aria-label="시나리오">
+      ${[["both","부부 모두 생존"],["self","본인 사망"],["spouse","배우자 사망"]].map(([k,l])=>`<button type="button" data-act="scn" data-v="${k}" aria-pressed="${ui.scenario===k}">${l}</button>`).join("")}
+    </div>`;
+  if(ui.scenario!=="both") h += `<div class="row"><span class="small muted">${OWN[ui.scenario]} 사망 나이</span>
+      <div class="stepper"><button type="button" data-act="death" data-d="-1" aria-label="한 살 줄이기">−</button><input type="number" inputmode="numeric" data-act-input="deathAge" value="${ui.deathAge}" aria-label="사망 나이"><button type="button" data-act="death" data-d="1" aria-label="한 살 늘리기">+</button></div></div>`;
+  h += `<div class="seg" role="group" aria-label="금액 기준">
+      <button type="button" data-act="real" data-v="1" aria-pressed="${ui.real}">오늘 가치로</button>
+      <button type="button" data-act="real" data-v="0" aria-pressed="${!ui.real}">그해 금액으로</button></div></div>`;
+
+  const all = simulate(ui.scenario), allBase = ui.scenario==="both" ? null : simulate("both");
+  let first = all.findIndex((r,i)=>r.gross>0 || (allBase && allBase[i].gross>0)); if(first<0) first = 0;
+  first = Math.max(0, first-1);
+  const rows = all.slice(first), base = allBase ? allBase.slice(first) : null;
+  if(!rows.some(r=>r.ageS===ui.selAge)) ui.selAge = Math.min(Math.max(65, rows[0].ageS), rows[rows.length-1].ageS);
+  const cur = rows.find(r=>r.ageS===ui.selAge), bcur = base && base.find(r=>r.ageS===ui.selAge);
+  const unit = ui.real ? "오늘 가치" : "그해 금액";
+  const who = [cur.alive.self?`본인 ${cur.ageS}세`:"", cur.alive.spouse?`배우자 ${cur.ageP}세`:""].filter(Boolean).join(", ");
+  h += `<p class="lead">${cur.y}년 (${who})<br>가구 세후 월 <span class="amt num">${man(cur.total)}</span></p>
+    <p class="small muted num" style="margin:0">세전 ${man(cur.gross)}, 세금 ${man(cur.taxM)}, ${unit} 기준. 막대나 표의 줄을 누르면 그해로 바뀝니다.</p>`;
+  h += chartSvg(rows, base);
+  if(bcur && bcur.total>0 && !(cur.alive.self && cur.alive.spouse)){
+    const p = cur.total/bcur.total*100;
+    h += `<div class="callout">${OWN[ui.scenario]} 사망 후 소득은 부부가 모두 살아 있을 때 ${man(bcur.total)} 대비 ${p.toFixed(0)}% 수준입니다. 생활비는 혼자가 되어도 둘일 때의 70% 안팎이 든다고 보는 경우가 많으니 그 차이를 확인해 보세요.</div>`;
+  }
+  // items
+  const list = [];
+  for(const o of ["self","spouse"]) for(const x of cur.items[o]){ if(x.gross>0) list.push({o,x}); }
+  list.sort((p,q)=>q.x.gross-p.x.gross);
+  h += `<ul class="items">` + (list.length ? list.map(({o,x})=>`<li><span>${esc(x.name)}<span class="tag">${OWN[o]}${x.tag?" / "+esc(x.tag):""}</span></span><span class="r num">${man((x.gross-x.tax)/12/cur.d)}<small>세금 ${man(x.tax/12/cur.d)}</small></span></li>${partsLine(x, o==='self'?cur.ageS:cur.ageP, cur.d)}`).join("")
+    : `<li class="muted">이 해에는 들어오는 연금이 없습니다.</li>`) + waitingRows(cur) + `</ul>`;
+  cur.notes.forEach(n=>{ h += `<p class="hint">${esc(n)}</p>`; });
+  if(ui.scenario!=="both"){
+    h += `<p class="hint">유족연금은 사망한 배우자의 국민연금 가입기간에 따라 기본연금액의 40~60%로 추정했고(공단 조회값을 넣으면 그 값을 씁니다), 본인 노령연금이 있으면 “노령연금 + 유족연금 30%”와 “유족연금만” 중 많은 쪽을 고른다고 계산합니다. 유족연금은 비과세입니다. 배우자가 젊을 때 사망하면 유족연금이 3년 지급 후 일정 나이까지 정지될 수 있어 이 부분은 반영하지 않았습니다.</p>`;
+  }
+  // tax method summary
+  const tm = o=>{ const t = cur.tax[o]; if(!cur.alive[o]) return "";
+    if(t.method==="low") return `${OWN[o]} 사적연금 과세분 연 ${man(t.PT)}: ${(lowRate(o==="self"?cur.ageS:cur.ageP)*100).toFixed(1)}% 저율 분리과세`;
+    if(t.method==="sep") return `${OWN[o]} 사적연금 과세분 연 ${man(t.PT)}: 1,500만원 초과로 16.5% 분리과세 선택이 유리`;
+    if(t.method==="comp") return `${OWN[o]} 사적연금 과세분 연 ${man(t.PT)}: 1,500만원 초과, 종합과세가 유리`;
+    return ""; };
+  const tl = [tm("self"),tm("spouse")].filter(Boolean);
+  if(tl.length) h += `<p class="hint num">${tl.join("<br>")} (금액은 그해 명목 기준)</p>`;
+  // table
+  h += `<section><h2>나이별 월 소득</h2><p class="hint">세후 월액, ${unit} 기준, 단위 만원입니다.</p><div class="tablewrap"><table class="num"><thead><tr><th>나이<small>본인/배우자</small></th><th>본인</th><th>배우자</th><th>합계</th><th>세금</th></tr></thead><tbody>`;
+  rows.forEach(r=>{
+    const deadMark = !r.alive.self ? " (본인 사망)" : !r.alive.spouse ? " (배우자 사망)" : "";
+    h += `<tr data-act="sel" data-age="${r.ageS}" class="${r.ageS===ui.selAge?"sel":""} ${deadMark?"dead":""}"><td>${r.ageS} / ${r.ageP}${deadMark&&(r.y===birth(ui.scenario)+num(ui.deathAge))?`<small>${OWN[ui.scenario]} 사망</small>`:""}</td><td>${r.alive.self&&r.net.self>=5000?mw(r.net.self):"-"}</td><td>${r.alive.spouse&&r.net.spouse>=5000?mw(r.net.spouse):"-"}</td><td><b>${r.total>=5000?mw(r.total):"-"}</b></td><td>${r.taxM>=5000?mw(r.taxM):"-"}</td></tr>`;
+  });
+  h += `</tbody></table></div></section>`;
+  return h;
+}
+/* accounts with no payment in the selected year, shown greyed so they never seem to vanish */
+function waitingRows(cur){
+  const shown = new Set();
+  for(const o of ["self","spouse"]) for(const x of cur.items[o]) if(x.gross>0 && x.a) shown.add(x.a.id);
+  return S.accounts.filter(a=>!shown.has(a.id)).map(a=>{
+    const age = cur.y - birth(a.owner), st = num(a.startAge)||65, yrs = num(a.payoutYears);
+    let why;
+    if(!cur.alive[a.owner]) why = "사망 후 지급 없음";
+    else if(a.type==="nps" && num(a.months)<120) why = "가입기간 120개월 미만";
+    else if(age<st) why = `${st}세부터 (이해 ${age}세)`;
+    else if(TYPES[a.type].invest || yrs) why = "지급 끝남";
+    else why = "예상액 미입력";
+    return `<li class="muted"><span>${esc(a.name)}<span class="tag">${OWN[a.owner]}</span></span><span class="r small">${why}</span></li>`;
+  }).join("");
+}
+/* breakdown of an invest-account withdrawal by tax source */
+/* annuity insurance: grow current balance + remaining premiums at the stated rate, then pay out evenly to the end age */
+function annuityCalc(a){
+  const t = TYPES[a.type];
+  const rate = num(a.rate!==undefined && a.rate!=="" ? a.rate : (t.usd ? 0 : 2.5));
+  const i = rate/100/12, now = ageNow(a.owner), start = num(a.startAge)||65;
+  const years = Math.max(1, num(a.payoutYears) || (num(a.endAge) ? num(a.endAge)-start : 20)), end = start + years;
+  const nAcc = Math.max(0,(start-now)*12), g = m => Math.pow(1+i, m);
+  let base = num(a.paid)+num(a.earn);
+  // lump-sum not yet reflected in the balance (e.g. just paid or about to pay): start from the premium itself
+  if(base===0 && a.payMode==="lump") base = num(a.premium)*num(a.loadPct??95)/100;
+  // phase 1: guaranteed (확정) rate for its remaining years, phase 2: crediting rate until start, phase 3: rate during payout
+  const has = v => v!==undefined && v!=="";
+  const i1 = has(a.fixRate) ? num(a.fixRate)/100/12 : i, fixM = has(a.fixRate) ? Math.max(0,num(a.fixYears))*12 : 0;
+  const payRate = has(a.payRate) ? num(a.payRate) : rate, iPay = payRate/100/12;
+  const payM = a.payMode!=="lump" ? Math.max(0, num(a.payLeft))*12 : 0, c = num(a.premium)*num(a.loadPct??95)/100;
+  let fv = base;
+  for(let m=0;m<nAcc;m++){ if(m<payM) fv += c; fv *= 1 + (m<fixM ? i1 : i); }
+  const n = (end-start)*12;
+  const monthly = iPay ? fv*iPay/(1-Math.pow(1+iPay,-n)) : fv/n;
+  const label = (fixM ? `확정 ${num(a.fixRate)}% ${num(a.fixYears)}년 후 ` : "") + `적립 ${rate}%` + (payRate!==rate ? `, 수령 중 ${payRate}%` : "");
+  return {rate, fv, monthly, years, end, label};
+}
+function annuityPreview(a){
+  const t = TYPES[a.type], c = annuityCalc(a);
+  const f = v => t.usd ? `$${Math.round(v).toLocaleString()} (≈ ${man(v*fx())})` : man(v);
+  return `→ ${num(a.startAge)||65}세 적립금 약 ${f(c.fv)}, ${c.end-1}세까지 ${c.years}년간 월 약 <b>${f(c.monthly)}</b> (그해 금액)`;
+}
+function partsLine(x, age, d){
+  const p = x.parts; if(!p) return "";
+  const m = v => man(v/12/d), rr = num(x.a.retireRate??4);
+  const bits = [];
+  if(p.nonded>0) bits.push(`미공제 원금 ${m(p.nonded)} 비과세`);
+  if(p.retire>0) bits.push(`퇴직금 ${m(p.retire)} 퇴직소득세의 ${p.k<10?70:60}% (약 ${(rr*(p.k<10?.7:.6)).toFixed(1)}%)`);
+  if(p.taxable>0) bits.push(`운용수익·공제받은 납입 ${m(p.taxable)} 연금소득세 (${x.tag==="승계"?"승계인 기준 ":""}1,500만원 판정 대상)`);
+  if(p.retireX>0) bits.push(`한도 초과 퇴직금 ${m(p.retireX)} 퇴직소득세 100%`);
+  if(p.taxableX>0) bits.push(`한도 초과 운용수익 ${m(p.taxableX)} 16.5%`);
+  return `<li class="sub"><span class="small muted">${bits.join("<br>")}${p.yearNo<=10?`<br>연금수령 ${p.yearNo}년차`:""}</span></li>`;
+}
+const mw = v => Math.round(v/10000).toLocaleString();
+function niceMax(v){ const p=Math.pow(10,Math.floor(Math.log10(v))), f=v/p; return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p; }
+function chartSvg(rows, base){
+  const W=360, L=34, R=6, B=22, ph=170;  // main panel height
+  const cw=(W-L-R)/rows.length;
+  const mMax = niceMax(Math.max(1, ...rows.map(r=>r.total), ...(base||[]).map(r=>r.total)));
+  const tMax = niceMax(Math.max(1, ...rows.map(r=>r.taxM)));
+  const tH = Math.max(6, ph*tMax/mMax);   // tax panel uses the same 만원-per-pixel scale as the main axis
+  const tT=18, mT=tT+tH+22, H=mT+ph+B;
+  const anim = animateChart; animateChart = false;
+  let g = "";
+  // tax panel axis
+  g += `<text x="${L+2}" y="${tT-5}" text-anchor="start" style="font-size:8px">세금 (만원)</text>`;
+  [0,1].forEach(k=>{ const yv=tT+tH-tH*k; g += `<line x1="${L}" x2="${W-R}" y1="${yv}" y2="${yv}" stroke="var(--line)" stroke-width="${k?0.5:1}"/>` + ((k===1 || tH>=12) ? `<text x="${L-4}" y="${yv+3}" text-anchor="end">${Math.round(tMax*k/10000)}</text>` : ""); });
+  // main panel axis
+  g += `<text x="${L+2}" y="${mT-5}" text-anchor="start" style="font-size:8px">세후 월 소득 (만원)</text>`;
+  for(let k=0;k<=4;k++){ const yv=mT+ph-ph*k/4;
+    g += `<line x1="${L}" x2="${W-R}" y1="${yv}" y2="${yv}" stroke="var(--line)" stroke-width="${k?0.5:1}"/><text x="${L-4}" y="${yv+3}" text-anchor="end">${Math.round(mMax*k/4/10000)}</text>`; }
+  rows.forEach((r,i)=>{
+    const x=L+i*cw, sel=r.ageS===S.ui.selAge, op=sel?1:.78, bx=(x+cw*.12).toFixed(2), bw=(cw*.76).toFixed(2), delay=`animation-delay:${i*16}ms`;
+    // main stack: self (green) + spouse (pink)
+    let yy=mT+ph, col="";
+    const seg=(v,c)=>{ const h=ph*v/mMax; if(h<=0) return; yy-=h; col+=`<rect x="${bx}" y="${yy.toFixed(2)}" width="${bw}" height="${h.toFixed(2)}" fill="var(${c})" opacity="${op}"/>`; };
+    seg(r.net.self,"--self"); seg(r.net.spouse,"--spouse");
+    if(col) g += `<g class="bar" style="${delay}">${col}</g>`;
+    // tax bar on its own axis
+    const th = tH*r.taxM/tMax;
+    if(th>0) g += `<g class="bar" style="${delay}"><rect x="${bx}" y="${(tT+tH-th).toFixed(2)}" width="${bw}" height="${th.toFixed(2)}" fill="var(--taxbar)" opacity="${op}"/></g>`;
+    if(sel) g += `<rect x="${x.toFixed(2)}" y="${tT-2}" width="${cw.toFixed(2)}" height="${(mT+ph)-(tT-2)}" fill="none" stroke="var(--ink)" rx="2"/>`;
+    if(r.ageS%5===0) g += `<text x="${(x+cw/2).toFixed(2)}" y="${H-8}" text-anchor="middle" ${sel?'style="fill:var(--ink);font-weight:700"':""}>${r.ageS}</text>`;
+    g += `<rect x="${x.toFixed(2)}" y="0" width="${cw.toFixed(2)}" height="${H}" fill="transparent" data-act="sel" data-age="${r.ageS}" style="cursor:pointer"/>`;
+  });
+  if(base){
+    const pts = base.map((r,i)=>`${(L+i*cw+cw/2).toFixed(2)},${(mT+ph-ph*r.total/mMax).toFixed(2)}`).join(" ");
+    g += `<polyline class="baseline" style="animation-delay:${rows.length*16}ms" points="${pts}" fill="none" stroke="var(--ink)" stroke-width="1.2" stroke-dasharray="3 2" pointer-events="none"/>`;
+    const dead = S.ui.scenario, dy = birth(dead)+num(S.ui.deathAge), di = rows.findIndex(r=>r.y===dy);
+    if(di>=0){ const x=L+di*cw; g += `<line x1="${x.toFixed(2)}" x2="${x.toFixed(2)}" y1="${tT}" y2="${mT+ph}" stroke="var(--warn)" stroke-width="1" pointer-events="none"/><text x="${(x+2).toFixed(2)}" y="${mT+8}" style="fill:var(--warn);font-size:8px">${OWN[dead]} 사망</text>`; }
+  }
+  g += `<text x="${W-R}" y="${H-1}" text-anchor="end" style="font-size:8px">본인 나이</text>`;
+  return `<div class="chartwrap"><svg class="chart${anim?" anim":""}" viewBox="0 0 ${W} ${H}" role="img" aria-label="본인 나이별 세금과 가구 세후 월 소득">${g}</svg>
+    <div class="legend"><span><i style="background:var(--self)"></i>본인 세후</span><span><i style="background:var(--spouse)"></i>배우자 세후</span><span><i style="background:var(--taxbar)"></i>세금 (위쪽, 같은 눈금)</span>${base?`<span><i class="line"></i>부부 모두 생존 시 합계</span>`:""}</div></div>`;
+}
+
+/* ---------- accounts view ---------- */
+function summary(a){
+  const t = TYPES[a.type]; let val="", meta=t.label, flag="";
+  const fmtC = v => t.usd ? "$"+Math.round(num(v)).toLocaleString() : man(num(v));
+  const od = a.onDeath || DEFAULT_DEATH[a.type];
+  if(t.invest){
+    const b = balanceNow(a); val = man(b);
+    const f = flows(a);
+    meta += `${a.institution?" / "+esc(a.institution):""} / 원금 ${man(num(a.paid))}, 수익 ${man(num(a.earn))}`;
+    meta += `<br>${a.startAge}세부터 ${a.payoutYears||20}년, 첫해 월 ${man((f.years[0]||{total:0}).total/12)} (세전, 그해 금액)`;
+    if(a.type==="irp" && num(a.retireFuture)) meta += `<br>${a.retireAge||60}세 퇴직금 ${man(num(a.retireFuture))} 이전 예정`;
+    meta += ` / 사망 시 ${od==="inherit"?"배우자 승계":"일시금"}`;
+    const over = f.years.filter(r=>r.retireX+r.taxableX>1);
+    if(over.length) flag = `수령 기간이 짧아 ${over.length}년 동안 연금수령한도를 넘습니다. 넘는 부분은 연금외수령이라 퇴직금은 퇴직소득세 100%, 운용수익 등은 16.5%로 과세됩니다. 수령 기간을 늘리면 피할 수 있어요.`;
+  } else if(a.type==="nps"){
+    const m = num(a.months);
+    val = a.monthly ? `월 ${man(num(a.monthly))}` : "예상액 미입력";
+    meta += ` / 가입 ${m}개월 / ${a.startAge||65}세 개시 / 과세대상 ${a.taxRatio??100}%`;
+    if(m<120) flag = `최소 가입기간 120개월 중 ${m}개월이라 이대로면 노령연금 대신 반환일시금 대상이고, 유족연금 계산에서도 빠집니다. 남은 ${120-m}개월을 임의가입이나 추후납부로 채울 수 있는지 공단(1355)에 확인해 보세요.`;
+  } else if(t.annuity){
+    const auto = a.calcMode==="auto", ac = auto ? annuityCalc(a) : null;
+    val = auto ? (ac.monthly>0 ? `월 ${fmtC(ac.monthly)}` : "이율 입력 필요") : a.monthly ? `월 ${fmtC(a.monthly)}` : "예상액 미입력";
+    if(auto) meta += ` / 자동 계산 (${ac.label}, 개시 시점 적립금 ${fmtC(ac.fv)})`;
+    if(auto && t.usd && !(a.rate!==undefined && a.rate!=="")) flag = "달러보험의 예상 이율을 넣어 주세요. 보험사 앱의 지금 공시이율을 쓰면 됩니다. 지금은 0%로 계산 중입니다.";
+    if(!auto && !num(a.monthly)) flag = "예상 월 연금이 비어 있어 0원으로 계산됩니다. 편집에서 보험사 예상액을 넣거나 ‘적립금·이율로 자동 계산’을 고르세요.";
+    if(auto && ac.fv<=0) flag = "적립금과 보험료가 모두 0이라 연금이 0원으로 나옵니다. 납입한 보험료나 일시납 보험료를 넣어 주세요.";
+    if(num(a.premium)) meta += a.payMode==="lump" ? ` / 일시납 ${fmtC(a.premium)}` : ` / 월 ${fmtC(a.premium)} × ${a.payYears||0}년납`;
+    if(num(a.paid)||num(a.earn)) meta += ` / 적립금 ${fmtC(num(a.paid)+num(a.earn))}`;
+    meta += `<br>${a.startAge||65}세 개시, ${a.calcMode==="auto" ? `${ac.years}년 수령` : num(a.payoutYears)?a.payoutYears+"년 확정":"종신"} / ${a.taxFree===false?"과세":"비과세"} / 사망 시 ${od==="spouse"?"배우자 계속 수령":"지급 종료"}`;
+    const krw = num(a.premium)*(t.usd?fx():1);
+    if(a.taxFree!==false && a.payMode==="lump" && krw>1e8) flag = `일시납 보험료가 원화 환산 ${man(krw)}로 비과세 한도 1억원을 넘습니다.`;
+    if(a.taxFree!==false && a.payMode!=="lump" && krw>1.5e6) flag = `월 보험료가 150만원을 넘으면 월적립식 비과세 요건에서 벗어납니다.`;
+  } else {
+    val = a.monthly ? `월 ${man(num(a.monthly))}` : "예상액 미입력";
+    meta += ` / ${a.startAge||65}세부터 ${num(a.payoutYears)?a.payoutYears+"년":"평생"} / 비과세 / 사망 시 ${od==="spouse"?"배우자 계속 수령":"지급 종료"}`;
+  }
+  return {val, meta, flag};
+}
+function viewAccounts(){
+  let h = "";
+  for(const o of ["self","spouse"]){
+    const list = S.accounts.filter(a=>a.owner===o);
+    const tot = list.reduce((s,a)=>s+balanceNow(a),0);
+    h += `<div class="owner"><div class="ohead"><h2>${OWN[o]} <span class="small muted num">${ageNow(o)}세</span></h2><span class="small muted num">적립금 ${man(tot)}</span></div>`;
+    if(!list.length) h += `<div class="empty">${OWN[o]} 명의 연금이 아직 없습니다.</div>`;
+    list.forEach(a=>{
+      const s = summary(a), c = o==="self"?"--self":"--spouse";
+      h += `<div class="card" style="--c:var(${c})"><div class="top"><span class="name">${esc(a.name||TYPES[a.type].label)}</span><span class="val num">${s.val}</span></div>
+        <div class="meta num">${s.meta}</div>${s.flag?`<div class="flag">${s.flag}</div>`:""}
+        ${pendingDel===a.id
+          ? `<div class="confirm">이 계좌를 삭제할까요?<div><button type="button" class="btn sm" data-act="delno">취소</button><button type="button" class="btn sm dangerfill" data-act="delyes" data-id="${a.id}">삭제</button></div></div>`
+          : `<div class="acts"><button type="button" class="btn sm danger" data-act="del" data-id="${a.id}">삭제</button><button type="button" class="btn sm" data-act="edit" data-id="${a.id}">편집</button></div>`}
+      </div>`;
+    });
+    h += `<button type="button" class="add" data-act="new" data-owner="${o}">+ ${OWN[o]} 연금 추가</button></div>`;
+  }
+  return h;
+}
+
+/* ---------- edit view ---------- */
+function F(label, key, opt={}){
+  const v = draft[key] ?? opt.def ?? "";
+  const money = opt.money;
+  return `<label class="${opt.full?"full":""}">${label}<input type="${opt.text?"text":"number"}" ${opt.text?"":`inputmode="${opt.dec?"decimal":"numeric"}"`} data-f="${key}" ${money?`data-money="${money}"`:""} value="${esc(v)}">${money?`<span class="conv muted num" data-conv="${key}">${convText(v,money)}</span>`:""}</label>`;
+}
+function convText(v, kind){ if(v===""||v==null) return ""; return kind==="usd" ? `≈ ${man(num(v)*fx())}` : `= ${man(num(v))}`; }
+function SEL(label, key, opts, opt={}){
+  const v = draft[key] ?? opt.def;
+  return `<label class="${opt.full?"full":""}">${label}<select data-f="${key}" ${opt.redraw?'data-redraw="1"':""}>${opts.map(([k,l])=>`<option value="${k}" ${String(v)===String(k)?"selected":""}>${l}</option>`).join("")}</select></label>`;
+}
+function CHK(label, key, def){ const on = draft[key] ?? def; return `<label class="chk full"><input type="checkbox" data-f="${key}" ${on?"checked":""}>${label}</label>`; }
+function viewEdit(){
+  const a = draft, t = TYPES[a.type], isNew = !S.accounts.some(x=>x.id===a.id);
+  let h = `<button type="button" class="back" data-act="tab" data-tab="accounts">‹ 계좌 목록</button><h2 style="margin-bottom:12px">${isNew?"연금 추가":"연금 편집"}</h2><div class="form">`;
+  h += SEL("명의","owner",[["self","본인"],["spouse","배우자"]]) + SEL("종류","type",Object.entries(TYPES).map(([k,v])=>[k,v.label]),{redraw:true});
+  h += F("이름","name",{text:true,full:true});
+  if(t.invest){
+    h += F("금융기관","institution",{text:true,full:true});
+    h += `<h3>지금 잔고</h3>` + F("납입 원금 (원)","paid",{money:"krw"}) + F("운용수익·이자 (원)","earn",{money:"krw"});
+    h += `<p class="hint full">금융사 앱에 나오는 원금과 수익을 그대로 옮기세요. 손실이면 수익을 음수로 적습니다.</p>`;
+    h += `<h3>앞으로 납입</h3>` + F("월 납입액 (원)","contrib",{money:"krw"}) + F("납입 종료 나이","contribUntil",{def:60});
+    if(a.type!=="dc") h += F("세액공제 안 받은 원금 (원)","nondeduct",{money:"krw",full:true}) + CHK("앞으로의 월 납입액도 세액공제를 받음 (소득이 없으면 해제)","contribDeduct",true);
+    if(a.type==="irp") h += `<h3>퇴직금</h3>` + F("이미 이전된 퇴직금 (원)","retire",{money:"krw"}) + F("퇴직 시 이전 예정 퇴직금 (원, 세전)","retireFuture",{money:"krw"}) + F("퇴직금 이전 나이","retireAge",{def:60});
+    if(a.type!=="ps") h += F("퇴직소득세 실효세율 (%)","retireRate",{def:4,dec:true});
+    h += `<h3>연금 수령</h3>` + F("수령 개시 나이","startAge",{def:60}) + F("수령 기간 (년)","payoutYears",{def:20});
+    h += F("예상 수익률 (연 %)","rate",{dec:true}) + `<p class="hint full" style="margin-top:-4px">비우면 가정 탭의 기대수익률(${S.settings.rate}%)을 씁니다. 원리금보장 상품만 담았다면 그 금리를, ETF라면 기대 수익률을 넣으세요.</p>`;
+    h += F("계좌 개설 연도","openYear",{def:""});
+    if(a.type!=="ps") h += CHK("2013년 3월 이전 가입한 퇴직연금에서 온 퇴직금 (연금수령연차 6년차부터)","oldPlan",false);
+    h += `<p class="hint full">연금수령한도는 계좌 전체에 하나로 적용되며 연금수령연차 10년차까지 ‘계좌평가액 ÷ (11 − 연차) × 120%’입니다. 연차는 만 55세이면서 개설 5년이 지난 해부터 셈니다. 개설 연도를 비우면 55세부터 셈니다.</p>`;
+    h += SEL("본인 사망 시","onDeath",[["inherit","배우자가 승계해 계속 수령"],["lump","일시금으로 상속"]],{def:DEFAULT_DEATH[a.type],full:true});
+    h += `<p class="hint full">연금저축은 배우자가 계좌를 승계해 연금으로 이어 받을 수 있고, IRP·DC는 금융사에 따라 일시금 지급이 일반적입니다. 실제 가능 여부는 금융사에 확인하세요.</p>`;
+  } else if(a.type==="nps"){
+    h += F("가입 개월 수","months") + F("수령 개시 나이","startAge",{def:65});
+    h += F("예상 월 수령액 (원, 오늘 가치)","monthly",{money:"krw",full:true}) + F("과세대상 비율 (%)","taxRatio",{def:100,dec:true});
+    h += F("유족연금 예상 월액 (원, 선택)","survivorMonthly",{money:"krw"});
+    h += `<p class="hint full">예상 월 수령액과 유족연금 예상액은 국민연금공단 ‘내 연금 알아보기’와 ‘장애·유족 예상연금 조회’에서 확인할 수 있습니다. 유족연금을 비우면 가입기간에 따라 40~60%로 추정합니다. 2001년 이전 납입분은 비과세라 과세대상 비율은 100%보다 낮을 수 있습니다.</p>`;
+  } else if(t.annuity){
+    const cur = t.usd ? "($)" : "(원)", mk = t.usd ? "usd" : "krw";
+    h += SEL("납입 방식","payMode",[["monthly","월납"],["lump","일시납"]],{redraw:true,def:"monthly"});
+    h += F((a.payMode==="lump"?"일시납 보험료 ":"월 보험료 ")+cur,"premium",{money:mk});
+    if(a.payMode!=="lump") h += F("납입 기간 (년)","payYears");
+    h += `<h3>지금 적립금</h3>` + F("납입한 보험료 "+cur,"paid",{money:mk}) + F("적립 이자 "+cur,"earn",{money:mk});
+    h += `<h3>연금 수령</h3>` + SEL("월 연금 계산","calcMode",[["manual","보험사 예상액 직접 입력"],["auto","적립금·이율로 자동 계산"]],{redraw:true,def:"manual",full:true});
+    if(a.calcMode==="auto"){
+      if(a.payMode!=="lump") h += F("남은 납입 기간 (년)","payLeft");
+      h += F("확정이율 (연 %, 있을 때만)","fixRate",{dec:true}) + F("확정이율 남은 기간 (년)","fixYears");
+      h += F("이후 적립 이율 (연 %)","rate",{dec:true,def:t.usd?"":2.5}) + F("연금 수령 중 이율 (연 %)","payRate",{dec:true});
+      h += F("보험료 적립률 (%)","loadPct",{dec:true,def:95});
+      h += `<p class="hint full">가입 후 몇 년간 이율을 고정해 주는 상품이면 확정이율과 남은 기간을, 그런 구간이 없으면 두 칸을 비우세요. 수령 중 이율을 비우면 이후 적립 이율을 그대로 씁니다.</p>`;
+      h += F("연금 개시 나이","startAge",{def:65}) + F("수령 기간 (년)","payoutYears",{def:20});
+      h += `<p class="hint full">거치형이면 개시 나이는 ‘가입 당시 나이 + 납입 기간 + 거치 기간’입니다. 일시납을 아직 적립금에 넣지 않았다면 일시납 보험료에서 시작해 계산합니다.</p>`;
+      h += `<p class="hint full num" data-preview="1">${annuityPreview(a)}</p>`;
+      h += `<p class="hint full">예상 이율은 보험사 앱에 나오는 이 상품의 현재 공시이율을 넣으세요. 원화 연금보험은 2026년 기준 대체로 2%대 후반이고, 보수적으로 보려면 최저보증이율을 쓰면 됩니다. 적립률은 앞으로 낼 보험료 중 사업비를 뺀 비율이고, 이미 쌓인 적립금에는 적용하지 않습니다. 종신형은 보험사가 생명표로 계산해서 실제 금액과 차이가 날 수 있어요.</p>`;
+    } else {
+      h += F("예상 월 연금 "+cur,"monthly",{money:mk}) + F("연금 개시 나이","startAge",{def:65}) + F("지급 기간 (년, 0=종신)","payoutYears",{def:0});
+    }
+    h += SEL("본인 사망 시","onDeath",[["stop","지급 종료"],["spouse","배우자가 계속 수령 (부부형)"]],{def:"stop",full:true});
+    h += CHK("보험차익 비과세 요건 충족 (10년 이상 유지 등)","taxFree",true);
+  } else {
+    h += F("월 수령액 (원)","monthly",{money:"krw",full:true}) + F("수령 개시 나이","startAge",{def:65}) + F("지급 기간 (년, 0=평생)","payoutYears",{def:0});
+    h += SEL("본인 사망 시","onDeath",[["spouse","배우자가 계속 수령"],["stop","지급 종료"]],{def:"spouse",full:true});
+    h += `<p class="hint full">주택연금처럼 비과세이고 정액으로 받는 소득을 넣는 칸입니다.</p>`;
+  }
+  h += `</div><div class="footbar"><button type="button" class="btn" data-act="tab" data-tab="accounts">취소</button><button type="button" class="btn primary" data-act="save">저장</button></div>`;
+  return h;
+}
+
+/* ---------- settings view ---------- */
+function viewSettings(){
+  const s = S.settings;
+  const inp = (l,k,step)=>`<label>${l}<input type="number" inputmode="decimal" ${step?`step="${step}"`:""} data-set="${k}" value="${esc(s[k])}"></label>`;
+  let h = `<div class="settings"><div class="form">${inp("본인 출생연도","birthSelf")}${inp("배우자 출생연도","birthSpouse")}${inp("기대수익률 (연 %)","rate","0.1")}${inp("물가상승률 (연 %)","inflation","0.1")}${inp("원/달러 환율","fx")}</div>
+    <p class="hint">국민연금은 물가에 맞춰 오르고, 연금저축·IRP·연금보험은 정해진 금액을 받는다고 계산합니다. “오늘 가치로” 보기는 물가상승률로 나눠서 지금 돈의 구매력으로 보여줍니다. 세금은 2026년 세법 기준 추정치이고 건강보험료는 반영하지 않았습니다.</p></div>`;
+  h += `<section><h2>가구 공유</h2>`;
+  if(mode==="household"){
+    h += `<div class="callout info" style="margin-top:8px">가구 공유 중입니다. 초대받은 배우자분도 같은 데이터를 보고 고칠 수 있어요.</div>
+      <p class="hint">배우자분을 추가하려면 아티팩트 화면 위쪽 공유 메뉴에서 배우자분 이메일을 <b>편집자</b>로 초대하세요. 배우자분이 링크를 열면 이 데이터가 자동으로 나타납니다. 공개 링크로는 공유하지 마세요. 공개 링크가 켜져 있으면 초대받은 사람도 데이터를 고칠 수 없고, 이 데이터는 편집자 외에는 읽을 수 없게 막혀 있습니다.</p>
+      <div class="row" style="margin-top:10px"><button type="button" class="btn" data-act="hhoff">이 기기에서 가구 공유 끄기</button></div>`;
+  } else if(householdAvailable){
+    h += `<p class="hint">이 앱에 가구 공유 데이터가 있습니다. 전환하면 이 기기의 데이터 대신 가구 데이터를 씁니다.</p>
+      <div class="row" style="margin-top:10px"><button type="button" class="btn primary" data-act="hhjoin">가구 데이터로 전환</button></div>`;
+  } else {
+    h += `<p class="hint">가구 공유를 켜면 지금 데이터를 공유 공간으로 옮기고, 편집자로 초대한 배우자분과 함께 보고 고칠 수 있습니다.</p>
+      <div class="row" style="margin-top:10px"><button type="button" class="btn primary" data-act="hhon">가구 공유 시작</button></div>`;
+  }
+  h += `</section>`;
+  h += `<section><h2>데이터</h2><p class="hint" id="status">${esc(S._status||"")}</p>
+    <div class="row" style="margin-top:10px"><button type="button" class="btn" data-act="sample">예시로 채워보기</button><button type="button" class="btn primary" data-act="savefile">JSON 파일로 저장</button><label class="btn" style="color:var(--ink);font-size:14px;cursor:pointer">JSON 파일 불러오기<input type="file" accept=".json,application/json" data-file="1" style="display:none"></label><button type="button" class="btn" data-act="export">아래 칸에 표시</button><button type="button" class="btn" data-act="import">칸 내용 불러오기</button>
+    ${pendingReset?`<span class="confirm" style="margin:0">모두 지울까요?<div><button type="button" class="btn sm" data-act="resetno">취소</button><button type="button" class="btn sm dangerfill" data-act="resetyes">모두 삭제</button></div></span>`:`<button type="button" class="btn danger" data-act="reset">모두 삭제</button>`}</div>
+    <label style="margin-top:12px">JSON<textarea id="jsonBox" rows="6" placeholder="내보내기를 누르면 여기에 나타납니다. 불러올 때는 여기에 붙여넣고 불러오기를 누르세요."></textarea></label></section>`;
+  return h;
+}
+
+/* replace every account (sample, reset, import) while remembering what was removed */
+function replaceAll(ns){
+  const now = Date.now(), del = Object.assign({}, S.deleted||{});
+  (S.accounts||[]).forEach(a=>{ del[a.id] = now; });
+  (ns.accounts||[]).forEach(a=>{ a.id = a.id || uid(); a.updatedAt = now+1; });
+  const ui = S.ui;
+  S = Object.assign(blankState(), ns, {ui, deleted:del, settingsAt:now});
+}
+/* ================= events ================= */
+function onClick(e){
+  const el = e.target.closest("[data-act]"); if(!el) return;
+  const act = el.dataset.act;
+  if(act==="tab"){ if(view==="edit") draft=null; go(el.dataset.tab); return; }
+  if(act==="scn"){ S.ui.scenario = el.dataset.v; animateChart = true; commitUi(); render(); return; }
+  if(act==="real"){ S.ui.real = el.dataset.v==="1"; animateChart = true; commitUi(); render(); return; }
+  if(act==="death"){ S.ui.deathAge = Math.max(40, Math.min(100, num(S.ui.deathAge)+num(el.dataset.d))); commitUi(); render(); return; }
+  if(act==="sel"){ S.ui.selAge = num(el.dataset.age); commitUi(); render(); return; }
+  if(act==="del"){ pendingDel = el.dataset.id; render(); return; }
+  if(act==="delno"){ pendingDel = null; render(); return; }
+  if(act==="delyes"){ const id = el.dataset.id; S.deleted = S.deleted||{}; S.deleted[id] = Date.now(); S.accounts = S.accounts.filter(a=>a.id!==id); pendingDel = null; commit(); render(); return; }
+  if(act==="edit"){ draft = JSON.parse(JSON.stringify(S.accounts.find(a=>a.id===el.dataset.id))); go("edit"); return; }
+  if(act==="new"){ draft = {id:uid(), owner:el.dataset.owner, type:"nps", name:"국민연금"}; go("edit"); return; }
+  if(act==="save"){
+    const i = S.accounts.findIndex(a=>a.id===draft.id);
+    if(!draft.name) draft.name = TYPES[draft.type].label;
+    draft.updatedAt = Date.now();
+    if(i>=0) S.accounts[i] = draft; else S.accounts.push(draft);
+    draft = null; commit(); go("accounts"); return;
+  }
+  if(act==="sample"){ replaceAll(sampleState()); commit(); go("flow"); return; }
+  if(act==="reset"){ pendingReset = true; render(); return; }
+  if(act==="resetno"){ pendingReset = false; render(); return; }
+  if(act==="resetyes"){ replaceAll(blankState()); pendingReset = false; commit(); render(); setStatus("모두 삭제했습니다."); return; }
+  if(act==="savefile"){ saveFile(); return; }
+  if(act==="hhon"){ if(!dbH){ setStatus("계정 연결이 안 되어 가구 공유를 켤 수 없습니다."); return; } setMode("household"); attach(false); householdAvailable = true; render(); setStatus("가구 공유를 켰습니다. 공유 공간에 올리는 중…"); return; }
+  if(act==="hhjoin"){ if(!dbH) return; setMode("household"); attach(true); render(); return; }
+  if(act==="hhoff"){ setMode("private"); attach(false); render(); setStatus("이 기기는 개인 저장으로 돌아왔습니다. 가구 데이터는 그대로 남아 있어요."); return; }
+  if(act==="export"){ const d = JSON.parse(JSON.stringify(S)); delete d._status; const box = document.getElementById("jsonBox"); box.value = JSON.stringify(d); box.select(); try{ navigator.clipboard.writeText(box.value).catch(()=>{}); }catch{} setStatus("JSON을 아래 칸에 표시했습니다. 복사해서 보관하세요."); return; }
+  if(act==="import"){ importText(document.getElementById("jsonBox").value); return; }
+  if(false){
+    try{ const d = JSON.parse(document.getElementById("jsonBox").value); if(!d.accounts||!d.settings) throw 0; replaceAll(Object.assign(blankState(), d)); commit(); render(); setStatus("불러왔습니다."); }
+    catch{ setStatus("JSON 형식이 맞지 않아 불러오지 못했습니다."); }
+    return;
+  }
+}
+function exportData(){ const d = JSON.parse(JSON.stringify(S)); delete d._status; d.exportedAt = new Date().toISOString(); return d; }
+async function saveFile(){
+  const json = JSON.stringify(exportData(), null, 2);
+  const d = new Date(), pad = n=>String(n).padStart(2,"0");
+  const filename = `우리집연금_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}.json`;
+  let dl = null;
+  try{ dl = window.claude && window.claude.use ? await window.claude.use("downloads") : null; }catch{}
+  if(dl){
+    try{ await dl.save({filename, data:json}); setStatus(`${filename} 파일로 저장했습니다.`); }
+    catch(err){
+      const c = err && err.code;
+      if(c==="declined") setStatus("파일 저장을 취소했습니다.");
+      else if(c==="rate_limited") setStatus("저장 창이 이미 열려 있습니다. 잠시 후 다시 눌러 주세요.");
+      else { setStatus("이 화면에서는 파일 저장을 쓸 수 없어 아래 칸에 표시했습니다. 복사해서 보관하세요."); const box = document.getElementById("jsonBox"); if(box){ box.value = json; box.select(); } }
+    }
+    return;
+  }
+  // outside the Claude viewer (plain browser): ordinary download
+  try{
+    const url = URL.createObjectURL(new Blob([json], {type:"application/json"}));
+    const a = document.createElement("a"); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 1000); setStatus(`${filename} 파일로 저장했습니다.`);
+  }catch{ const box = document.getElementById("jsonBox"); if(box){ box.value = json; box.select(); } setStatus("파일 저장이 안 되어 아래 칸에 표시했습니다."); }
+}
+/* files from the earlier app kept cash + holdings instead of principal/earnings */
+function migrateAccount(a){
+  if(TYPES[a.type] && TYPES[a.type].invest && (a.paid===undefined || a.paid==="") && (a.cash!==undefined || Array.isArray(a.holdings))){
+    const hs = a.holdings||[];
+    a.paid = Math.round(num(a.cash) + hs.reduce((s,h)=>s+num(h.q)*num(h.a),0));
+    a.earn = Math.round(hs.reduce((s,h)=>s+num(h.q)*(num(h.p)-num(h.a)),0));
+  }
+  if(!TYPES[a.type]) a.type = "etc";
+  return a;
+}
+function importText(t){
+  try{ const d = JSON.parse(t); if(!d || !Array.isArray(d.accounts) || !d.settings) throw 0;
+    d.accounts = d.accounts.map(migrateAccount);
+    d.settings = Object.assign({}, blankState().settings, d.settings, {confirmed:true});
+    delete d.exportedAt; replaceAll(Object.assign(blankState(), d)); commit(); render(); setStatus(`불러왔습니다. 계좌 ${S.accounts.length}개.`); }
+  catch{ setStatus("JSON 형식이 맞지 않아 불러오지 못했습니다."); }
+}
+function onInput(e){
+  const el = e.target;
+  if(el.dataset.file && e.type==="change"){
+    const f = el.files && el.files[0]; if(!f) return;
+    const r = new FileReader(); r.onload = ()=>importText(String(r.result)); r.onerror = ()=>setStatus("파일을 읽지 못했습니다."); r.readAsText(f);
+    el.value = ""; return;
+  }
+  if(el.dataset.f && draft){
+    const k = el.dataset.f;
+    draft[k] = el.type==="checkbox" ? el.checked : (el.tagName==="SELECT" || el.type==="text") ? el.value : (el.value===""?"":+el.value);
+    if(el.dataset.money){ const c = app().querySelector(`[data-conv="${k}"]`); if(c) c.textContent = convText(el.value, el.dataset.money); }
+    { const pv = app().querySelector("[data-preview]"); if(pv && TYPES[draft.type].annuity) pv.innerHTML = annuityPreview(draft); }
+    if(el.dataset.redraw && e.type==="change"){
+      if(k==="type"){ draft = {id:draft.id, owner:draft.owner, type:draft.type, name:TYPES[draft.type].label}; }
+      render();
+    }
+    return;
+  }
+  if(el.dataset.set){
+    S.settings[el.dataset.set] = num(el.value); S.settings.confirmed = true; S.settingsAt = Date.now(); commit();
+    return;
+  }
+  if(el.dataset.actInput==="deathAge" && e.type==="change"){
+    S.ui.deathAge = Math.max(40, Math.min(100, num(el.value))); commitUi(); render();
+  }
+}
+
+/* ================= boot ================= */
+document.addEventListener("DOMContentLoaded", ()=>{
+  document.querySelector("nav").addEventListener("click", e=>{ const b = e.target.closest("button[data-tab]"); if(b){ draft=null; go(b.dataset.tab); } });
+  app().addEventListener("click", onClick);
+  app().addEventListener("input", onInput);
+  app().addEventListener("change", onInput);
+  loadLocal();
+  render();
+  setStatus("이 기기에 저장됨");
+  connectDb();
+});
+</script>
+</body>
+</html>
